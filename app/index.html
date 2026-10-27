@@ -374,9 +374,9 @@ function vNew(){
     <select id="f-class"><option value="new">+ A new class</option>${clsOpts}</select></label>
   <div id="newclass" ${d.classId === 'new' ? '' : 'hidden'} style="display:flex;flex-direction:column;gap:12px">
     <label class="lbl">Class name<input type="text" id="f-cname" value="${esc(d.cname)}" placeholder="e.g. Grade 8 – Rizal"></label>
-    <label class="big" for="f-sf1" style="background:var(--green)">📥 Load the SF1 Excel file</label>
+    <label class="big" for="f-sf1" style="background:var(--green)">📥 Load the SF1 or SF2 Excel file</label>
     <input type="file" id="f-sf1" class="hide" accept=".xlsx,.xls,.csv">
-    <p class="muted small" style="margin-top:-6px">The SF1 from the registrar or adviser. LRN and names are read for you, boys first then girls.</p>
+    <p class="muted small" style="margin-top:-6px">From the registrar or adviser. Names are read for you, boys first then girls. The SF1 also gives the LRN.</p>
     <label class="lbl">Learners, one per line <span class="muted small" style="font-weight:400" id="ncount"></span>
       <textarea id="f-names" placeholder="407726160002  DE MESA, Jose Martin M.&#10;406632170012  DE VEYRA, Coen Neil A.&#10;or names only, one per line">${esc(d.names)}</textarea>
       <span class="muted small" style="font-weight:400">No file? Paste from Excel (LRN and name columns) or type the names. Check the spelling.</span></label>
@@ -657,6 +657,7 @@ function parseNames(text){
 }
 function loadScript(src){ return new Promise((res, rej) => { if(window.XLSX) return res(); const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
 async function importSF1(file){
+  // Reads the SF1 (LRN + names) or the SF2 / any class list with a NAME column (names only).
   const ta = $('#f-names'), err = $('#ferr'); err.hidden = true;
   try{
     await loadScript('/app/xlsx.full.min.js');
@@ -665,22 +666,45 @@ async function importSF1(file){
     for(const sn of wb.SheetNames){
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: '' });
       let hr = -1, cL = -1, cN = -1, cS = -1;
-      for(let r = 0; r < Math.min(rows.length, 40) && hr < 0; r++){ rows[r].forEach((v, c) => { const t = String(v).trim().toUpperCase();
-        if(t === 'LRN') cL = c; if(cN < 0 && /^NAME/.test(t)) cN = c; if(/^SEX/.test(t) || t === '(M/F)') cS = c; }); if(cL >= 0 && cN >= 0) hr = r; }
+      for(let r = 0; r < Math.min(rows.length, 40) && hr < 0; r++){
+        rows[r].forEach((v, c) => { const t = String(v).replace(/\s+/g, ' ').trim().toUpperCase();
+          if(t === 'LRN') cL = c; if(cN < 0 && /^NAME ?(\(|$)/.test(t)) cN = c; if(/^SEX/.test(t) || t === '(M/F)') cS = c; });
+        if(cN >= 0) hr = r; }
       if(hr < 0) continue;
-      const list = [];
-      for(let r = hr + 1; r < rows.length; r++){ const lrn = String(rows[r][cL]).replace(/\D/g, ''); const name = String(rows[r][cN]).replace(/\s+/g, ' ').trim();
-        if(lrn.length === 12 && name){ let sex = cS >= 0 ? String(rows[r][cS]).trim().toUpperCase()[0] : '';
+      const list = []; let girlsNow = false, sawMarker = false;
+      for(let r = hr + 1; r < rows.length; r++){
+        const line = rows[r].map(v => String(v).toUpperCase()).join(' ');
+        if(/TOTAL/.test(line) && /\bMALE\b/.test(line) && !/FEMALE/.test(line)){ girlsNow = true; sawMarker = true; continue; }
+        if(/TOTAL/.test(line) && /FEMALE/.test(line)) break;
+        const name = String(rows[r][cN]).replace(/\s+/g, ' ').trim();
+        if(!name || /TOTAL/i.test(name)) continue;
+        if(cL >= 0){
+          const lrn = String(rows[r][cL]).replace(/\D/g, '');
+          if(lrn.length !== 12) continue;
+          let sex = cS >= 0 ? String(rows[r][cS]).trim().toUpperCase()[0] : '';
           if(!sex){ for(let c = cN + 1; c < cN + 4; c++){ const v = String(rows[r][c] || '').trim().toUpperCase(); if(v === 'M' || v === 'F'){ sex = v; break; } } }
-          list.push({ lrn, name, sex }); } }
-      if(list.length){ found = { list, sheet: sn, school: rows.flat().join(' ') }; break; }
+          list.push({ lrn, name, sex });
+        } else {
+          if(!/,/.test(name) || !/[A-Za-zÑñ]/.test(name)) continue;   // a real name: "FAMILY, Given"
+          list.push({ lrn: '', name, sex: girlsNow ? 'F' : (sawMarker ? 'M' : '') });
+        }
+      }
+      if(sawMarker) list.forEach(x => { if(!x.sex) x.sex = 'M'; });
+      if(list.length){ found = { list, hasLrn: cL >= 0 }; break; }
     }
-    if(!found){ err.textContent = 'No learners with an LRN were found in this file. Is it the SF1? You can paste the names instead.'; err.hidden = false; return; }
-    const by = (a, b) => a.name.localeCompare(b.name);
-    const boys = found.list.filter(x => x.sex !== 'F').sort(by), girls = found.list.filter(x => x.sex === 'F').sort(by);
-    V.d.names = boys.concat(girls).map(x => x.lrn + '  ' + x.name).join('\n'); ta.value = V.d.names;
-    $('#ncount').textContent = `· ${boys.length} boys, ${girls.length} girls loaded`;
-    toast(`${found.list.length} learners loaded from the SF1. Please check the spelling.`);
+    if(!found){ err.textContent = 'No learners\' names were found in this file. Use the SF1 or SF2 Excel file, or paste the names.'; err.hidden = false; return; }
+    let out = found.list, msg;
+    if(found.hasLrn){
+      const by = (a, b) => a.name.localeCompare(b.name);
+      const boys = out.filter(x => x.sex !== 'F').sort(by), girls = out.filter(x => x.sex === 'F').sort(by);
+      out = boys.concat(girls); msg = `· ${boys.length} boys, ${girls.length} girls loaded, with LRN`;
+    } else {
+      const boys = out.filter(x => x.sex === 'M').length, girls = out.filter(x => x.sex === 'F').length;
+      msg = boys || girls ? `· ${boys} boys, ${girls} girls loaded (this file has no LRN)` : `· ${out.length} learners loaded (this file has no LRN)`;
+    }
+    V.d.names = out.map(x => (x.lrn ? x.lrn + '  ' : '') + x.name).join('\n'); ta.value = V.d.names;
+    $('#ncount').textContent = msg;
+    toast(`${out.length} learners loaded. Please check the spelling.`);
   }catch(e){ err.textContent = 'This file could not be read. Save it as .xlsx and try again, or paste the names.'; err.hidden = false; }
 }
 
