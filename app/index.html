@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TestPaper FastChecker</title>
+<meta name="description" content="Check test papers with your phone camera. Scores, MPS and item analysis in minutes.">
+<meta name="theme-color" content="#1F2A44">
+<link rel="manifest" href="/app/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column, three big tiles per test. Paper-blue ground, red-ballpen accent. */
+:root{
+  --bg:#EEF2F6; --card:#FFFFFF; --ink:#1C2230; --muted:#5B6577; --line:#D5DCE6;
+  --navy:#1F2A44; --navy-ink:#FFFFFF; --red:#C8102E; --green:#18794E; --amber:#A35400; --hi:#FFE45C;
+  --soft-red:#FBE7EA; --soft-green:#E3F3EA; --soft-amber:#FFF1DE;
+  --f-body:'Atkinson Hyperlegible', system-ui, sans-serif; --f-disp:'Young Serif', Georgia, serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#12161F; --card:#1B2130; --ink:#E8ECF3; --muted:#9AA4B5; --line:#2C3446;
+  --navy:#3A4E86; --navy-ink:#FFFFFF; --red:#FF5A6E; --green:#4CC38A; --amber:#F0A24A; --hi:#FFE45C;
+  --soft-red:#3A1E25; --soft-green:#173226; --soft-amber:#3A2A15; color-scheme:dark; } }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:560px;margin:0 auto;padding-block:8px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:18px;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:6px}
+.brand{background:none;border:0;padding:6px 0;font-family:var(--f-disp);font-size:19px;line-height:1.1;text-align:left;display:flex;align-items:center;gap:8px}
+.brand i{font-style:normal;color:var(--red);font-size:26px;line-height:1}
+.pill{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:700}
+.pill.low{border-color:var(--red);color:var(--red)}
+.pill.paid{border-color:var(--green);color:var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;border:0;border-radius:14px;background:var(--navy);color:var(--navy-ink);font-weight:700;font-size:18px;text-decoration:none;padding:12px 16px;text-align:center}
+.big.red{background:var(--red);color:#fff}
+.ghost{width:100%;min-height:50px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);font-weight:700}
+.link{background:none;border:0;color:var(--red);font-weight:700;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+.back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;align-self:flex-start}
+.hook h1{font-size:34px}
+.hook mark{background:linear-gradient(transparent 55%, var(--hi) 55%);color:inherit;padding:0 2px}
+.steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);width:34px;height:34px;border-radius:50%;border:2px solid var(--red);color:var(--red);display:grid;place-items:center;font-weight:700}
+.steps b{display:block}
+.free{font-size:14px;color:var(--green);font-weight:700;text-align:center}
+.tests{display:flex;flex-direction:column;gap:10px}
+.test{display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.test b{font-size:18px}
+.test .mps{grid-row:1 / span 2;grid-column:2;align-self:center;text-align:right;font-variant-numeric:tabular-nums}
+.test .mps strong{display:block;font-family:var(--f-disp);font-weight:400;font-size:24px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;background:var(--soft-amber);color:var(--amber);margin-left:6px;vertical-align:2px}
+.tiles{display:flex;flex-direction:column;gap:10px}
+.tile{display:grid;grid-template-columns:46px 1fr;gap:2px 14px;align-items:center;text-align:left;width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px}
+.tile .n{grid-row:1 / span 2;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:var(--bg)}
+.tile b{font-size:19px}
+.tile small{color:var(--muted);font-size:14px}
+.tile.main{border-color:var(--navy);background:var(--navy);color:var(--navy-ink)}
+.tile.main small{color:var(--navy-ink);opacity:.85}
+.tile.main .n{background:rgba(255,255,255,.14)}
+label.lbl{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+input[type=text],input[type=number],select,textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--card);padding:12px;font-size:17px;min-height:50px}
+textarea{min-height:140px;font-size:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kgrid{display:flex;flex-direction:column;gap:4px;max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--bg)}
+.krow{display:grid;grid-template-columns:36px repeat(5,1fr);gap:6px;align-items:center}
+.krow span{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kb{height:42px;border-radius:50%;aspect-ratio:1;justify-self:center;border:2px solid var(--line);background:var(--card);font-weight:700}
+.kb.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.hide{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tips{margin:0;padding-left:20px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:4px}
+.score{display:flex;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
+.score strong{font-family:var(--f-disp);font-weight:400;font-size:56px;line-height:1;color:var(--red)}
+.who{display:flex;flex-direction:column;gap:6px}
+.who b{font-size:20px}
+.warn{background:var(--soft-amber);color:var(--amber);border-radius:10px;padding:10px 12px;font-size:15px;font-weight:700}
+.bad{background:var(--soft-red);color:var(--red);border-radius:10px;padding:12px;font-size:15px}
+.ok{background:var(--soft-green);color:var(--green);border-radius:10px;padding:10px 12px;font-size:15px;font-weight:700}
+.flag{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0;border-top:1px dashed var(--line)}
+.flag span{flex:1 1 140px;font-size:15px}
+.flag button{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--card);font-weight:700}
+.overlay{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;font-variant-numeric:tabular-nums}
+.stat strong{display:block;font-family:var(--f-disp);font-weight:400;font-size:28px}
+.stat.mps{grid-column:1 / -1}
+.stat.mps strong{font-size:46px;color:var(--red)}
+.stat small{color:var(--muted);font-size:13px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right}
+.chip{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:2px 10px}
+.chip.m{background:var(--soft-green);color:var(--green)}
+.chip.n{background:var(--soft-amber);color:var(--amber)}
+.chip.l{background:var(--soft-red);color:var(--red)}
+.reteach{display:flex;flex-wrap:wrap;gap:6px}
+.x{background:none;border:0;color:var(--muted);font-size:18px;padding:2px 6px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gtable td,.gtable th{padding:7px 8px;font-size:14px}
+.gtable .sticky{position:sticky;left:0;background:var(--card);z-index:1;max-width:170px;white-space:normal;min-width:150px}
+.gtable .pcol{background:var(--bg);font-weight:700}
+.gtable .qg{font-weight:700;font-size:16px}
+.gtable .qg.low{color:var(--red)}
+.gin{width:58px;min-height:36px!important;padding:4px 6px!important;font-size:15px!important;text-align:right;border-radius:8px!important}
+.miss{color:var(--amber);font-weight:700}
+.meter{display:flex;flex-direction:column;gap:4px}
+.mrow{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.mbar{height:12px;border-radius:6px;background:var(--bg);overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--green);border-radius:6px}
+.plan{border:2px solid var(--navy);border-radius:16px;padding:18px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.promo{align-self:flex-start;background:var(--hi);color:#1C2230;font-weight:700;font-size:14px;border-radius:999px;padding:3px 12px}
+.promo s{opacity:.7}
+.plan .price{font-family:var(--f-disp);font-size:42px;line-height:1}
+.plan .price small{font-family:var(--f-body);font-size:16px;color:var(--muted)}
+.plan ul{margin:0;padding-left:20px}
+.ostep{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.ostep > i{font-style:normal;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700}
+.ostep > div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.copyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.copyrow code{font-family:var(--f-body);font-weight:700;font-size:18px;background:var(--bg);border-radius:8px;padding:6px 10px;word-break:break-all}
+.copy{border:1.5px solid var(--navy);color:var(--ink);background:var(--card);border-radius:10px;padding:6px 12px;font-weight:700;font-size:14px}
+.inline{display:flex;gap:8px}
+.inline input{flex:1;min-width:0}
+.inline button:not(.ghost){flex:none;border:0;border-radius:12px;background:var(--navy);color:var(--navy-ink);font-weight:700;padding:0 16px}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--red);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation-duration:3s}}
+.busy{display:flex;align-items:center;gap:12px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+details summary{cursor:pointer;font-weight:700;color:var(--muted);padding:6px 0}
+.keyline{font-family:ui-monospace,monospace;font-size:15px;word-break:break-all;letter-spacing:.06em}
+.foot{text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================================================================
+//  SETTINGS FOR BEAVEN — change these lines only.
+// =====================================================================
+const CONFIG = {
+  appName: 'TestPaper FastChecker',
+  freePapers: 50,                        // free checked papers per phone
+  price: '₱99',                          // price of one load now (launch promo)
+  regularPrice: '₱149',                  // regular price. After the promo, set price to '₱149' and regularPrice to ''
+  loadPapers: 300,                       // papers in one load
+  loadDays: 60,                          // a load ends after this many days, or when the papers run out — whichever comes first
+  gcashNumber: '09XX XXX XXXX',          // TODO: your GCash number
+  gcashName: 'B. B.',                    // TODO: name shown in GCash (initials are fine)
+  contactEmail: 'testpaperfastchecker@gmail.com',   // TODO: the app's own Gmail
+  messenger: 'facebook.com/BeavsApp',    // TODO: your Facebook Page
+  // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
+  // Add this app's web address to the CORS list at the top of verify-code.js.
+  verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
+  mastered: 75, nearly: 50               // item analysis cut-offs, in percent
+};
+// =====================================================================
+
+/*READER-START*/
+// The paper reader. Sheet coordinates are millimetres, measured from the centre of the top-left black square.
+const LAY = { W:180, H:250, mk:10, guard:[0,14], bitY:44, bitX0:42, bitStep:9, bitS:5,
+  rowY0:62, rowStep:9, colX:[8,68,128], bub0:12, bubStep:9, bubR:2.8 };
+function itemXY(i, j){ const c = Math.floor(i / 20), r = i % 20; return [LAY.colX[c] + LAY.bub0 + j * LAY.bubStep, LAY.rowY0 + r * LAY.rowStep]; }
+function bitXY(k){ return [LAY.bitX0 + k * LAY.bitStep, LAY.bitY]; }
+function solveLin(A, b){
+  const n = b.length, M = A.map((r, i) => r.concat(b[i]));
+  for(let c = 0; c < n; c++){
+    let p = c; for(let r = c + 1; r < n; r++) if(Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    const v = M[c][c]; if(Math.abs(v) < 1e-12) return null;
+    for(let r = 0; r < n; r++){ if(r === c) continue; const f = M[r][c] / v; if(!f) continue; for(let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((r, i) => r[n] / r[i]);
+}
+function homog(src, dst){
+  const A = [], b = [];
+  for(let i = 0; i < 4; i++){ const [x, y] = src[i], [u, v] = dst[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); }
+  const h = solveLin(A, b); return h ? h.concat(1) : null;
+}
+function mapH(H, x, y){ const z = H[6] * x + H[7] * y + 1; return [(H[0] * x + H[1] * y + H[2]) / z, (H[3] * x + H[4] * y + H[5]) / z]; }
+// img = { g: grey pixels (0–255), w, h }. Returns the answers, or { error }.
+function readGray(img, n, opts){
+  const { g, w, h } = img, M = Math.max(w, h), W1 = w + 1;
+  const I = new Float64Array(W1 * (h + 1));
+  for(let y = 0; y < h; y++){ let row = 0; for(let x = 0; x < w; x++){ row += g[y * w + x]; I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + row; } }
+  const box = (x0, y0, x1, y1) => { x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0)); x1 = Math.min(w, Math.floor(x1)); y1 = Math.min(h, Math.floor(y1));
+    const a = (x1 - x0) * (y1 - y0); if(a <= 0) return 255; return (I[y1 * W1 + x1] - I[y0 * W1 + x1] - I[y1 * W1 + x0] + I[y0 * W1 + x0]) / a; };
+  // 1. dark spots, compared with the paper around them (so shadows don't fool it)
+  const R = Math.round(M / 16), mask = new Uint8Array(w * h);
+  for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){ if(g[y * w + x] < box(x - R, y - R, x + R + 1, y + R + 1) * 0.6) mask[y * w + x] = 1; }
+  // 2. group the dark spots
+  const lab = new Int32Array(w * h), st = new Int32Array(w * h), comps = [];
+  for(let p = 0; p < w * h; p++){
+    if(!mask[p] || lab[p]) continue;
+    const id = comps.length + 1; let sp = 0; st[sp++] = p; lab[p] = id;
+    let cnt = 0, sx = 0, sy = 0, x0 = w, x1 = 0, y0 = h, y1 = 0;
+    while(sp){ const q = st[--sp], x = q % w, y = (q / w) | 0; cnt++; sx += x; sy += y;
+      if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+      if(x > 0 && mask[q - 1] && !lab[q - 1]){ lab[q - 1] = id; st[sp++] = q - 1; }
+      if(x < w - 1 && mask[q + 1] && !lab[q + 1]){ lab[q + 1] = id; st[sp++] = q + 1; }
+      if(y > 0 && mask[q - w] && !lab[q - w]){ lab[q - w] = id; st[sp++] = q - w; }
+      if(y < h - 1 && mask[q + w] && !lab[q + w]){ lab[q + w] = id; st[sp++] = q + w; } }
+    comps.push({ n: cnt, cx: sx / cnt, cy: sy / cnt, x0, x1, y0, y1 });
+  }
+  // 3. the four big black corner squares
+  const cand = [];
+  for(const c of comps){ const bw = c.x1 - c.x0 + 1, bh = c.y1 - c.y0 + 1, sz = Math.sqrt(bw * bh);
+    if(sz < 0.012 * M || sz > 0.12 * M) continue; const ar = bw / bh; if(ar < 0.55 || ar > 1.8) continue;
+    if(c.n / (bw * bh) < 0.6) continue; c.sz = sz; cand.push(c); }
+  if(cand.length < 4) return { error: 'corners' };
+  const ss = cand.map(c => c.sz).sort((a, b) => b - a), ref = (ss[1] + ss[2]) / 2;
+  const big = cand.filter(c => c.sz >= 0.72 * ref && c.sz <= 1.5 * ref);
+  if(big.length < 4) return { error: 'corners' };
+  const pick = f => big.reduce((a, c) => f(c) < f(a) ? c : a);
+  const tl = pick(c => c.cx + c.cy), tr = pick(c => (w - c.cx) + c.cy), br = pick(c => -(c.cx + c.cy)), bl = pick(c => c.cx + (h - c.cy));
+  if(new Set([tl, tr, br, bl]).size < 4) return { error: 'corners' };
+  const corners = [[tl.cx, tl.cy], [tr.cx, tr.cy], [br.cx, br.cy], [bl.cx, bl.cy]];
+  const sheet = [[0, 0], [LAY.W, 0], [LAY.W, LAY.H], [0, LAY.H]];
+  const R2 = Math.round(M / 10);
+  const disc = (H, x, y, rmm) => { const [cx, cy] = mapH(H, x, y), [ax, ay] = mapH(H, x + 1, y);
+    const r = Math.max(1.5, rmm * Math.hypot(ax - cx, ay - cy)), r2 = r * r; let sum = 0, c = 0;
+    for(let yy = Math.floor(cy - r); yy <= cy + r; yy++) for(let xx = Math.floor(cx - r); xx <= cx + r; xx++){
+      if(xx < 0 || yy < 0 || xx >= w || yy >= h) continue; if((xx - cx) ** 2 + (yy - cy) ** 2 > r2) continue; sum += g[yy * w + xx]; c++; }
+    return (c ? sum / c : 255) / Math.max(1, box(cx - R2, cy - R2, cx + R2, cy + R2)); };
+  // 4. which way up? the small guard square sits under the top-left corner
+  let best = null;
+  for(let k = 0; k < 4; k++){ const H = homog(sheet, [0, 1, 2, 3].map(i => corners[(i + k) % 4])); if(!H) continue;
+    const sc = disc(H, LAY.W, LAY.guard[1], 1.5) - disc(H, LAY.guard[0], LAY.guard[1], 1.5);
+    if(!best || sc > best.sc) best = { H, sc }; }
+  if(!best || best.sc < 0.25) return { error: 'corners' };
+  const H = best.H;
+  // 5. read the circles
+  const black = [[0, 0], [LAY.W, 0], [0, LAY.H], [LAY.W, LAY.H]].map(p => disc(H, p[0], p[1], 2.5)).reduce((a, b) => a + b) / 4;
+  const raw = [], all = [];
+  for(let i = 0; i < n; i++){ const row = []; for(let j = 0; j < opts; j++){ const [x, y] = itemXY(i, j); const v = disc(H, x, y, LAY.bubR * 0.55); row.push(v); all.push(v); } raw.push(row); }
+  const sorted = all.slice().sort((a, b) => a - b), blank = sorted[Math.floor(sorted.length * 0.7)];
+  if(blank - black < 0.2) return { error: 'dark' };
+  const S = v => Math.max(0, Math.min(1.5, (blank - v) / (blank - black)));
+  const ans = [], flags = [], marks = [];
+  for(let i = 0; i < n; i++){ const s = raw[i].map(S); marks.push(s);
+    const order = s.map((v, j) => j).sort((a, b) => s[b] - s[a]), top = s[order[0]], sec = s[order[1]];
+    if(top < 0.35){ ans.push(null); flags.push({ i, why: 'blank' }); }
+    else if(sec >= 0.35 && top - sec < 0.25){ ans.push(null); flags.push({ i, why: 'two' }); }
+    else ans.push(order[0]); }
+  let learner = 0, code = 0;
+  for(let k = 0; k < 12; k++){ const [x, y] = bitXY(k); if(S(disc(H, x, y, 1.2)) > 0.5){ if(k < 7) learner |= 1 << k; else code |= 1 << (k - 7); } }
+  return { H, ans, flags, marks, learner, code };
+}
+/*READER-END*/
+
+// ---------- saved data (stays on this phone) ----------
+const DB = 'tpfastchecker-v1';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const LET = 'ABCDE';
+let S = loadDb();
+function loadDb(){ try{ const v = JSON.parse(localStorage.getItem(DB) || 'null'); if(v && Array.isArray(v.tests)) return v; }catch(e){} return { classes: [], tests: [], used: 0, codes: [] }; }
+function save(){ try{ localStorage.setItem(DB, JSON.stringify(S)); }catch(e){ toast('This phone is not saving. Open TestPaper FastChecker in Chrome, not a private tab.'); } }
+const DEVICE = (() => { let d = null; try{ d = localStorage.getItem('st_device'); }catch(e){}
+  if(!d || !/^d-[a-z0-9]{12,40}$/.test(d)){ const a = new Uint8Array(12); crypto.getRandomValues(a); d = 'd-' + Array.from(a, b => b.toString(36).padStart(2, '0')).join('').slice(0, 24); try{ localStorage.setItem('st_device', d); }catch(e){} }
+  return d; })();
+const uid = () => Math.random().toString(36).slice(2, 10);
+const getClass = id => S.classes.find(c => c.id === id);
+const getTest = id => S.tests.find(t => t.id === id);
+// Like cellphone load: free papers first, then each load code (the one ending soonest is used first).
+function activeLoads(){ const now = Date.now(); return (S.codes || []).filter(c => typeof c.exp === 'number' && c.exp > now && (c.used || 0) < c.papers).sort((a, b) => a.exp - b.exp); }
+function loadLeft(){ return activeLoads().reduce((a, c) => a + c.papers - (c.used || 0), 0); }
+function loadEnds(){ const a = activeLoads(); return a.length ? Math.max(...a.map(c => c.exp)) : 0; }
+function freeLeft(){ return Math.max(0, CONFIG.freePapers - (S.used || 0)); }
+function papersLeft(){ return freeLeft() + loadLeft(); }
+function canCheck(){ return papersLeft() > 0; }
+function spendOne(){ if(freeLeft() > 0){ S.used = (S.used || 0) + 1; return; } const c = activeLoads()[0]; if(c) c.used = (c.used || 0) + 1; }
+const daysLeft = ms => Math.max(0, Math.ceil((ms - Date.now()) / 864e5));
+const fmtDate = ms => new Date(ms).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+let toastT; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800); }
+async function copy(text, btn){ try{ await navigator.clipboard.writeText(text); if(btn){ const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = o, 1800); } }catch(e){ prompt('Copy this:', text); } }
+
+// ---------- scores ----------
+function scoreOf(t, ans){ let s = 0; for(let i = 0; i < t.n; i++) if(ans[i] != null && ans[i] === t.key[i]) s++; return s; }
+function stats(t){
+  const cls = getClass(t.classId), res = Object.entries(t.results || {});
+  const scores = res.map(([, r]) => r.score);
+  const mean = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const sd = scores.length > 1 ? Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / (scores.length - 1)) : 0;
+  const items = [];
+  for(let i = 0; i < t.n; i++){ let ok = 0; const wrong = {}; res.forEach(([, r]) => { const a = r.ans[i]; if(a === t.key[i]) ok++; else { const k = a == null ? '—' : LET[a]; wrong[k] = (wrong[k] || 0) + 1; } });
+    const pct = res.length ? ok / res.length * 100 : 0; const top = Object.entries(wrong).sort((a, b) => b[1] - a[1])[0];
+    items.push({ i, ok, pct, top: top ? top[0] + ' (' + top[1] + ')' : '', lvl: pct >= CONFIG.mastered ? 'm' : pct >= CONFIG.nearly ? 'n' : 'l' }); }
+  return { done: res.length, total: cls ? cls.learners.length : 0, mean, sd, mps: t.n ? mean / t.n * 100 : 0,
+    hi: scores.length ? Math.max(...scores) : 0, lo: scores.length ? Math.min(...scores) : 0, items };
+}
+const PARTS = { WW: 'Written work', PT: 'Performance task', QA: 'Quarterly exam' };
+const LVL = { m: 'Mastered', n: 'Nearly mastered', l: 'Least mastered' };
+
+// ---------- screens ----------
+let V = { name: 'home' };
+function go(name, arg = {}, replace){ V = Object.assign({ name }, arg); try{ history[replace ? 'replaceState' : 'pushState']({ v: V }, ''); }catch(e){} render(); window.scrollTo(0, 0); }
+window.addEventListener('popstate', e => { V = (e.state && e.state.v) || { name: 'home' }; if(V.name === 'check') V.res = null; render(); });
+
+function header(){
+  const left = papersLeft(), ll = loadLeft();
+  const pill = ll ? `<button class="pill ${left <= 30 ? 'low' : 'paid'}" data-act="load">🎟 ${left} papers · ${daysLeft(loadEnds())} days</button>`
+    : `<button class="pill ${left <= 10 ? 'low' : ''}" data-act="load">${left ? left + ' free papers left' : '🎟 Load now'}</button>`;
+  return `<header class="top"><button class="brand" data-act="home"><i>✓</i>${CONFIG.appName}</button>${pill}</header>`;
+}
+
+function vHome(){
+  if(!S.tests.length) return `
+  <section class="card hook">
+    <h1>Check a whole class of test papers in <mark>minutes</mark>.</h1>
+    <p class="muted" style="margin-top:10px">No more red-pen nights. No more counting tallies for the item analysis.</p>
+    <ol class="steps" style="margin-top:16px">
+      <li><div><b>Type the answer key</b><span class="muted small">Tap A, B, C or D. Takes one minute.</span></div></li>
+      <li><div><b>Print the answer sheets</b><span class="muted small">Each learner's name is already printed on their sheet.</span></div></li>
+      <li><div><b>Take a photo of each paper</b><span class="muted small">The score appears at once. MPS and item analysis are done for you.</span></div></li>
+    </ol>
+  </section>
+  <button class="big" data-act="new">+ Make my first test</button>
+  <button class="ghost" data-act="sample">Show me a sample class first</button>
+  <p class="free">Your first ${CONFIG.freePapers} papers are free.</p>`;
+  return `<div class="inline"><button class="big" data-act="new" style="flex:1">+ New test</button><button class="ghost" data-act="grades" style="flex:1;min-height:58px">📒 Quarterly grades</button></div>
+  <div class="tests">${S.tests.slice().reverse().map(t => { const st = stats(t), c = getClass(t.classId);
+    return `<button class="test" data-act="open" data-id="${t.id}"><b>${esc(t.title)}${t.sample ? '<span class="tag">Sample</span>' : ''}</b>
+      <span class="mps">${st.done ? `<strong>${st.mps.toFixed(0)}%</strong><small class="muted">MPS</small>` : '<small class="muted">Not yet checked</small>'}</span>
+      <span class="muted small">${esc(c ? c.name : '')} · ${t.n} items · ${st.done} of ${st.total} checked</span></button>`; }).join('')}</div>`;
+}
+
+function vTest(){
+  const t = getTest(V.id); if(!t) return vHome();
+  const st = stats(t), c = getClass(t.classId);
+  return `<button class="back" data-act="home">‹ All tests</button>
+  <div><h1>${esc(t.title)}</h1><p class="muted" style="margin-top:4px">${esc(c ? c.name : '')} · ${t.n} items · ${LET.slice(0, t.opts).split('').join(' ')}</p></div>
+  <div class="tiles">
+    <button class="tile" data-act="print"><span class="n">🖨</span><b>Print answer sheets</b><small>One sheet per learner, names already printed</small></button>
+    <button class="tile main" data-act="check"><span class="n">📷</span><b>Check papers</b><small>${st.done} of ${st.total} checked</small></button>
+    <button class="tile" data-act="results"><span class="n">📊</span><b>Scores &amp; item analysis</b><small>${st.done ? 'MPS ' + st.mps.toFixed(2) + '% · Excel file ready' : 'Shows after the first paper'}</small></button>
+  </div>
+  <details><summary>Answer key and settings</summary>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+      <p class="keyline">${t.key.map((k, i) => (i + 1) + LET[k]).join(' ')}</p>
+      <button class="ghost" data-act="edit">Change the answer key</button>
+      <button class="ghost" data-act="del" style="color:var(--red)">Delete this test</button>
+    </div></details>`;
+}
+
+function vNew(){
+  const d = V.d;
+  const clsOpts = S.classes.filter(c => !c.sample).map(c => `<option value="${c.id}" ${d.classId === c.id ? 'selected' : ''}>${esc(c.name)} (${c.learners.length})</option>`).join('');
+  return `<button class="back" data-act="${V.edit ? 'open' : 'home'}" data-id="${V.edit || ''}">‹ Back</button>
+  <h1>${V.edit ? 'Change the test' : 'New test'}</h1>
+  <label class="lbl">Test name<input type="text" id="f-title" value="${esc(d.title)}" placeholder="e.g. Science 8 – 2nd Quarter Exam"></label>
+  ${V.edit ? '' : `<label class="lbl">Class
+    <select id="f-class"><option value="new">+ A new class</option>${clsOpts}</select></label>
+  <div id="newclass" ${d.classId === 'new' ? '' : 'hidden'} style="display:flex;flex-direction:column;gap:12px">
+    <label class="lbl">Class name<input type="text" id="f-cname" value="${esc(d.cname)}" placeholder="e.g. Grade 8 – Rizal"></label>
+    <label class="big" for="f-sf1" style="background:var(--green)">📥 Load the SF1 Excel file</label>
+    <input type="file" id="f-sf1" class="hide" accept=".xlsx,.xls,.csv">
+    <p class="muted small" style="margin-top:-6px">The SF1 from the registrar or adviser. LRN and names are read for you, boys first then girls.</p>
+    <label class="lbl">Learners, one per line <span class="muted small" style="font-weight:400" id="ncount"></span>
+      <textarea id="f-names" placeholder="407726160002  DE MESA, Jose Martin M.&#10;406632170012  DE VEYRA, Coen Neil A.&#10;or names only, one per line">${esc(d.names)}</textarea>
+      <span class="muted small" style="font-weight:400">No file? Paste from Excel (LRN and name columns) or type the names. Check the spelling.</span></label>
+  </div>`}
+  <div class="row2">
+    <label class="lbl">Number of items<input type="number" id="f-n" min="1" max="60" value="${d.n}" inputmode="numeric"></label>
+    <label class="lbl">Choices<select id="f-opts"><option value="4" ${d.opts === 4 ? 'selected' : ''}>A B C D</option><option value="5" ${d.opts === 5 ? 'selected' : ''}>A B C D E</option></select></label>
+  </div>
+  <div class="row2">
+    <label class="lbl">Quarter<select id="f-term">${[1, 2, 3, 4].map(q => `<option value="${q}" ${d.term === q ? 'selected' : ''}>Quarter ${q}</option>`).join('')}</select></label>
+    <label class="lbl">Counts as<select id="f-part">${Object.entries(PARTS).map(([k, v]) => `<option value="${k}" ${d.part === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+  </div>
+  <label class="lbl">Answer key <span class="muted small" style="font-weight:400" id="kcount"></span>
+    <input type="text" id="f-keytype" placeholder="Fast way: type the letters, e.g. ABDCA…" autocapitalize="characters" spellcheck="false"></label>
+  <div class="kgrid" id="kgrid"></div>
+  <div class="bad" id="ferr" hidden></div>
+  <button class="big" data-act="savetest">${V.edit ? 'Save changes' : 'Save test'}</button>`;
+}
+function drawKey(){
+  const d = V.d, g = $('#kgrid'); if(!g) return;
+  let h = ''; for(let i = 0; i < d.n; i++){ h += `<div class="krow"><span>${i + 1}</span>`; for(let j = 0; j < 5; j++) h += j < d.opts ? `<button class="kb ${d.key[i] === j ? 'on' : ''}" data-act="k" data-i="${i}" data-j="${j}" aria-label="Item ${i + 1} ${LET[j]}">${LET[j]}</button>` : '<i></i>'; h += '</div>'; }
+  g.innerHTML = h; countKey();
+}
+function countKey(){ const d = V.d; const k = d.key.slice(0, d.n).filter(x => x != null && x < d.opts).length; $('#kcount').textContent = `· ${k} of ${d.n} set`; }
+
+function vCheck(){
+  const t = getTest(V.id); if(!t) return vHome();
+  const st = stats(t), cls = getClass(t.classId);
+  let body = '';
+  if(V.busy) body = `<div class="card busy"><div class="spin"></div>Reading the paper…</div>`;
+  else if(V.err) body = `<div class="bad"><b>${esc(V.err)}</b><ul class="tips" style="margin-top:6px;color:inherit">
+      <li>Lay the paper flat on a plain table.</li><li>All 4 black squares must be inside the photo.</li><li>Use daylight or a bright room. Avoid your own shadow.</li></ul></div>
+      <label class="big" for="cam">📷 Take the photo again</label>`;
+  else if(V.res){ const r = V.res, sc = scoreOf(t, r.ans), L = cls.learners;
+    const prev = r.learner > 0 && t.results[r.learner] ? t.results[r.learner] : null;
+    body = `<div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div class="who">${r.learner > 0 && r.learner <= L.length
+        ? `<span class="muted small">Learner no. ${r.learner}</span><b>${esc(L[r.learner - 1])}</b><button class="link" data-act="pickshow" style="align-self:flex-start">Not this learner?</button>`
+        : `<span class="warn">Choose the learner for this paper.</span>`}
+        <select id="lpick" ${r.learner > 0 && r.learner <= L.length && !V.pick ? 'hidden' : ''}><option value="0">— Choose the learner —</option>${L.map((n, i) => `<option value="${i + 1}" ${r.learner === i + 1 ? 'selected' : ''}>${i + 1}. ${esc(n)}</option>`).join('')}</select></div>
+      ${r.wrongTest ? `<div class="warn">This sheet looks like it was printed for a different test. Check that you picked the right test.</div>` : ''}
+      ${prev ? `<div class="warn">Already checked (score ${prev.score}). Saving will replace it.</div>` : ''}
+      <div class="score"><strong>${sc}</strong><span class="muted">/ ${t.n} · ${(sc / t.n * 100).toFixed(0)}%</span></div>
+      ${r.flags.length ? `<div><b>Look at ${r.flags.length === 1 ? 'this item' : 'these items'}:</b>${r.flags.map(f => `<div class="flag"><span>No. ${f.i + 1}: ${f.why === 'blank' ? 'no answer found' : 'two circles shaded'}${r.ans[f.i] != null ? ' → <b>' + LET[r.ans[f.i]] + '</b>' : ''}</span>${LET.slice(0, t.opts).split('').map((L2, j) => `<button data-act="fix" data-i="${f.i}" data-j="${j}" style="${r.ans[f.i] === j ? 'background:var(--ink);color:var(--bg);border-color:var(--ink)' : ''}">${L2}</button>`).join('')}</div>`).join('')}
+        <p class="muted small" style="margin-top:4px">Leave it as is to count it wrong, or tap the letter you see on the paper.</p></div>` : '<div class="ok">Every item was read clearly.</div>'}
+      <img class="overlay" src="${r.overlay}" alt="The paper with green circles on correct answers and red on wrong ones">
+      <p class="muted small">Green = correct. Red = learner's wrong answer. Orange = check this item.</p>
+      <button class="big red" data-act="savepaper">Save score · next paper</button>
+      <label class="ghost" for="cam" style="display:grid;place-items:center">Retake photo</label></div>`; }
+  else body = `<label class="big" for="cam" style="min-height:76px;font-size:20px">📷 Take a photo of a paper</label>
+    <ul class="tips"><li>Paper flat on a plain table, all 4 black squares in the photo.</li><li>The name is read from the sheet, so any order is fine.</li><li>Check the score, then tap <b>Save score · next paper</b>.</li></ul>
+    ${V.last ? `<div class="ok">Saved: ${esc(V.last)}</div>` : ''}`;
+  return `<button class="back" data-act="open" data-id="${t.id}">‹ ${esc(t.title)}</button>
+  <div><h1>Check papers</h1><p class="muted" style="margin-top:4px">${st.done} of ${st.total} checked · ${papersLeft()} papers left in your load</p></div>
+  <input type="file" id="cam" class="hide" accept="image/*" capture="environment">
+  ${body}`;
+}
+
+function vResults(){
+  const t = getTest(V.id); if(!t) return vHome();
+  const st = stats(t), cls = getClass(t.classId);
+  if(!st.done) return `<button class="back" data-act="open" data-id="${t.id}">‹ ${esc(t.title)}</button><h1>Scores &amp; item analysis</h1><div class="card"><p>No papers checked yet. Check at least one paper first.</p></div><button class="big" data-act="check">📷 Check papers</button>`;
+  const least = st.items.filter(x => x.lvl === 'l');
+  return `<button class="back" data-act="open" data-id="${t.id}">‹ ${esc(t.title)}</button>
+  <div><h1>Scores &amp; item analysis</h1><p class="muted" style="margin-top:4px">${esc(cls.name)} · ${t.n} items · ${st.done} of ${st.total} learners</p></div>
+  <div class="stats">
+    <div class="stat mps"><strong>${st.mps.toFixed(2)}%</strong><small>Mean Percentage Score (MPS)</small></div>
+    <div class="stat"><strong>${st.mean.toFixed(1)}</strong><small>Mean</small></div>
+    <div class="stat"><strong>${st.hi}</strong><small>Highest</small></div>
+    <div class="stat"><strong>${st.lo}</strong><small>Lowest</small></div>
+    <div class="stat"><strong>${st.sd.toFixed(2)}</strong><small>Standard deviation (SD)</small></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <h2>${least.length ? `Reteach these ${least.length} item${least.length > 1 ? 's' : ''}` : 'No least-mastered items 🎉'}</h2>
+    ${least.length ? `<div class="reteach">${least.map(x => `<span class="chip l">No. ${x.i + 1} · ${x.pct.toFixed(0)}%</span>`).join('')}</div><p class="muted small">Fewer than ${CONFIG.nearly}% of the class got these right.</p>` : ''}
+  </div>
+  <div class="inline" style="flex-wrap:wrap"><button class="ghost" style="flex:1" data-act="csvitems">⬇ Item analysis (Excel)</button><button class="ghost" style="flex:1" data-act="csvscores">⬇ Scores (Excel)</button></div>
+  <button class="ghost" data-act="grades">📒 Open quarterly grades</button>
+  <h2>Item analysis</h2>
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Key</th><th class="num">Correct</th><th class="num">%</th><th>Most chosen wrong</th><th>Level</th></tr></thead><tbody>
+  ${st.items.map(x => `<tr><td>${x.i + 1}</td><td>${LET[t.key[x.i]]}</td><td class="num">${x.ok}/${st.done}</td><td class="num">${x.pct.toFixed(0)}</td><td>${esc(x.top)}</td><td><span class="chip ${x.lvl}">${LVL[x.lvl]}</span></td></tr>`).join('')}
+  </tbody></table></div>
+  <h2>Scores</h2>
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Learner</th><th class="num">Score</th><th class="num">%</th><th></th></tr></thead><tbody>
+  ${cls.learners.map((n, i) => { const r = t.results[i + 1]; return `<tr><td>${i + 1}</td><td>${esc(n)}</td><td class="num">${r ? r.score : '<span class="muted">—</span>'}</td><td class="num">${r ? (r.score / t.n * 100).toFixed(0) : ''}</td><td>${r ? `<button class="x" data-act="unscore" data-l="${i + 1}" aria-label="Remove score">✕</button>` : ''}</td></tr>`; }).join('')}
+  </tbody></table></div>
+  <p class="foot">Mastered: ${CONFIG.mastered}% and up · Nearly mastered: ${CONFIG.nearly}–${CONFIG.mastered - 1}% · Least mastered: below ${CONFIG.nearly}%</p>`;
+}
+
+function vLoad(){
+  const msg = `Hi! I sent ${CONFIG.price} by GCash for a ${CONFIG.appName} load (${CONFIG.loadPapers} papers).\nMy phone ID: ${DEVICE}\nName:\nSchool:`;
+  const ll = loadLeft(), loads = activeLoads();
+  const meter = (label, left, total, note) => `<div class="meter"><div class="mrow"><span>${label}</span><b>${left} of ${total}</b></div><div class="mbar"><i style="width:${total ? Math.round(left / total * 100) : 0}%"></i></div>${note ? `<small class="muted">${note}</small>` : ''}</div>`;
+  return `<button class="back" data-act="home">‹ Back</button>
+  <h1>My load</h1>
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    ${freeLeft() ? meter('🎁 Free papers', freeLeft(), CONFIG.freePapers, 'Used first. They do not expire.') : '<p class="muted">Your ' + CONFIG.freePapers + ' free papers are used up.</p>'}
+    ${loads.map(c => meter('🎟 Load ' + c.code.slice(0, 7) + '…', c.papers - (c.used || 0), c.papers, `Ends ${fmtDate(c.exp)} · ${daysLeft(c.exp)} days left`)).join('')}
+    ${!ll && !freeLeft() ? '<div class="warn">No papers left. Reload to keep checking. Your tests and scores are safe.</div>' : ''}
+  </div>
+  <div class="plan">${CONFIG.regularPrice ? `<span class="promo">🎉 Launch promo · regular <s>${CONFIG.regularPrice}</s></span>` : ''}<div class="price">${CONFIG.price} <small>= ${CONFIG.loadPapers} papers</small></div>
+    <ul><li>About ₱${(parseFloat(CONFIG.price.replace(/[^\d.]/g, '')) / CONFIG.loadPapers).toFixed(2)} per paper</li><li>Use within ${CONFIG.loadDays} days. The load ends when the papers run out or the days are up, whichever comes first.</li><li>Item analysis, MPS, SD, quarterly grades and Excel files included</li><li>No auto-charge. Reload only when you need it.</li></ul></div>
+  <h2>How to load</h2>
+  <div class="ostep"><i>1</i><div><b>Send ${CONFIG.price} by GCash</b><div class="copyrow"><code>${esc(CONFIG.gcashNumber)}</code><button class="copy" data-act="copy" data-t="${esc(CONFIG.gcashNumber.replace(/\s/g, ''))}">Copy</button></div><span class="muted small">GCash name: ${esc(CONFIG.gcashName)}</span></div></div>
+  <div class="ostep"><i>2</i><div><b>Send the GCash receipt and this message</b>
+    <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(msg)}">Copy the message</button></div>
+    <span class="muted small">Email <b>${esc(CONFIG.contactEmail)}</b> or message <b>${esc(CONFIG.messenger)}</b>. Your code arrives within the day.</span></div></div>
+  <div class="ostep"><i>3</i><div><b>Type your load code here</b>
+    <div class="inline"><input type="text" id="code" placeholder="SE-…" autocomplete="off" autocapitalize="characters" spellcheck="false"><button data-act="usecode">Load</button></div>
+    <div class="bad" id="codeerr" hidden></div></div></div>
+  <p class="foot">This phone's ID: <b>${DEVICE}</b> · Loads add up: a new load does not erase the papers you have left.</p>`;
+}
+
+function render(){
+  const v = { home: vHome, test: vTest, new: vNew, check: vCheck, results: vResults, load: vLoad, grades: vGrades }[V.name] || vHome;
+  $('#app').innerHTML = header() + v() + `<p class="foot">Scores stay on this phone. ${CONFIG.appName} by Beavs Apps</p>`;
+  if(V.name === 'new') drawKey();
+}
+
+// ---------- quarterly grades ----------
+const WEIGHTS = {
+  do15:  { label: 'Most subjects · 20 / 50 / 30 (DO 015, s. 2026)', w: [20, 50, 30] },
+  do15t: { label: 'EPP/TLE, MAPEH · 20 / 60 / 20 (DO 015, s. 2026)', w: [20, 60, 20] },
+  lang:  { label: 'Languages, AP, EsP · 30 / 50 / 20 (DO 8, s. 2015)', w: [30, 50, 20] },
+  ms:    { label: 'Math, Science · 40 / 40 / 20 (DO 8, s. 2015)', w: [40, 40, 20] },
+  shs:   { label: 'SHS core · 25 / 50 / 25 (DO 8, s. 2015)', w: [25, 50, 25] },
+  custom:{ label: 'Custom', w: null } };
+// Initial Grade 70 = 75 (SY 2026–2027 adjusted table) or Initial Grade 60 = 75 (DO 8, s. 2015)
+function tmAdj(ig){ ig = Math.round(ig * 100) / 100; if(ig >= 99.5) return 100; if(ig >= 70) return Math.min(99, 75 + Math.floor((ig - 70) / 1.18 + 1e-9));
+  let k = 0; for(let j = 1; j <= 14; j++){ if(ig >= Math.round(70 * j / 15 * 100) / 100 + 0.01 - 1e-9) k = j; } return 60 + k; }
+function tmDo8(ig){ ig = Math.round(ig * 100) / 100; if(ig >= 100) return 100; if(ig >= 60) return Math.min(99, 75 + Math.floor((ig - 60) / 1.6 + 1e-9)); return 60 + Math.floor(ig / 4 + 1e-9); }
+const lrnCell = (c, i) => (c.lrn && c.lrn[i]) ? '="' + c.lrn[i] + '"' : '';
+function gradeSetup(c){ if(!c.grade) c.grade = { preset: 'do15', w: [20, 50, 30], tm: 'adj' }; return c.grade; }
+function gradeCols(c, q){
+  const cols = [];
+  S.tests.filter(t => t.classId === c.id && (t.term || 1) === q).forEach(t => cols.push({ key: 't' + t.id, title: t.title, part: t.part || 'WW', hps: t.n, get: i => t.results[i + 1] ? t.results[i + 1].score : null }));
+  (c.extra || []).filter(x => x.term === q).forEach(x => cols.push({ key: 'x' + x.id, x, title: x.title, part: x.part, hps: x.hps, get: i => { const v = x.scores[i + 1]; return v === '' || v == null || isNaN(+v) ? null : +v; } }));
+  return ['WW', 'PT', 'QA'].map(p => cols.filter(k => k.part === p));
+}
+function gradeRow(c, q, i, groups){
+  const g = gradeSetup(c), out = { parts: [], missing: 0 }; let ig = 0, complete = true;
+  groups.forEach((cols, p) => { let sS = 0, sH = 0; cols.forEach(k => { const v = k.get(i); if(v == null) out.missing++; sS += v || 0; sH += k.hps; });
+    const ps = sH ? sS / sH * 100 : null, ws = ps == null ? null : ps * g.w[p] / 100; if(ps == null) complete = false; else ig += ws;
+    out.parts.push({ total: sS, ps, ws }); });
+  out.ig = complete ? ig : null; out.qg = complete ? (g.tm === 'do8' ? tmDo8(ig) : tmAdj(ig)) : null; return out;
+}
+function vGrades(){
+  const classes = S.classes; if(!classes.length) return `<button class="back" data-act="home">‹ Back</button><h1>Quarterly grades</h1><div class="card">Make a test first. Its class will show here.</div>`;
+  const c = getClass(V.cid) || classes[classes.length - 1], q = V.term || S.lastTerm || 1; V.cid = c.id; V.term = q;
+  const g = gradeSetup(c), groups = gradeCols(c, q), names = ['Written work', 'Performance task', 'Quarterly exam'];
+  const head = groups.map((cols, p) => cols.map(k => `<th class="num" title="${esc(k.title)}">${esc(k.title.slice(0, 14))}<br><small>/${k.hps}${k.x ? ` <button class="x" data-act="delcol" data-id="${k.x.id}" aria-label="Remove column">✕</button>` : ''}</small></th>`).join('') + `<th class="num pcol">${['WW', 'PT', 'QA'][p]} %<br><small>× ${g.w[p]}%</small></th>`).join('');
+  const rows = c.learners.map((n, i) => { const r = gradeRow(c, q, i, groups);
+    return `<tr><td class="sticky">${i + 1}. ${esc(n)}</td>` + groups.map((cols, p) => cols.map(k => k.x
+      ? `<td class="num"><input class="gin" inputmode="decimal" data-x="${k.x.id}" data-l="${i + 1}" value="${esc(k.x.scores[i + 1] ?? '')}"></td>`
+      : `<td class="num">${k.get(i) == null ? '<span class="miss">—</span>' : k.get(i)}</td>`).join('') + `<td class="num pcol" id="g${i}p${p}">${r.parts[p].ps == null ? '' : r.parts[p].ps.toFixed(2)}</td>`).join('')
+      + `<td class="num" id="g${i}ig">${r.ig == null ? '' : r.ig.toFixed(2)}</td><td class="num qg ${r.qg != null && r.qg < 75 ? 'low' : ''}" id="g${i}qg">${r.qg ?? '—'}</td></tr>`; }).join('');
+  const emptyParts = groups.map((cols, p) => cols.length ? null : names[p]).filter(Boolean);
+  return `<button class="back" data-act="home">‹ Back</button>
+  <h1>Quarterly grades</h1>
+  <div class="row2"><label class="lbl">Class<select id="g-class">${classes.map(k => `<option value="${k.id}" ${k.id === c.id ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
+    <label class="lbl">Quarter<select id="g-term">${[1, 2, 3, 4].map(k => `<option value="${k}" ${k === q ? 'selected' : ''}>Quarter ${k}</option>`).join('')}</select></label></div>
+  <details class="card"><summary>Weights and transmutation · ${g.w.join(' / ')}</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+    <label class="lbl">Subject weights<select id="g-w">${Object.entries(WEIGHTS).map(([k, v]) => `<option value="${k}" ${g.preset === k ? 'selected' : ''}>${v.label}</option>`).join('')}</select></label>
+    ${g.preset === 'custom' ? `<div class="row3">${['WW', 'PT', 'QA'].map((p, k) => `<label class="lbl">${p} %<input type="number" id="g-c${k}" value="${g.w[k]}" inputmode="numeric"></label>`).join('')}</div>` : ''}
+    <label class="lbl">Transmutation<select id="g-tm"><option value="adj" ${g.tm === 'adj' ? 'selected' : ''}>Initial grade 70 = 75 (SY 2026–2027)</option><option value="do8" ${g.tm === 'do8' ? 'selected' : ''}>Initial grade 60 = 75 (DO 8, s. 2015)</option></select></label>
+    <p class="muted small">Please match these with your school's E-Class Record.</p></div></details>
+  <p class="muted small">Tests checked in TestPaper FastChecker fill in by themselves: set "Quarter" and "Counts as" when you make a test. Scores you typed (like performance tasks) go in their own column.</p>
+  ${emptyParts.length ? `<div class="warn">No ${emptyParts.join(' or ').toLowerCase()} scores yet for Quarter ${q}. The quarterly grade shows once every part has at least one score.</div>` : ''}
+  ${V.adding ? `<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>New score column</b>
+      <label class="lbl">Name<input type="text" id="x-title" placeholder="e.g. PT 1 – Science fair poster"></label>
+      <div class="row2"><label class="lbl">Counts as<select id="x-part">${Object.entries(PARTS).map(([k, v]) => `<option value="${k}" ${k === 'PT' ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label class="lbl">Highest possible score<input type="number" id="x-hps" value="50" inputmode="numeric"></label></div>
+      <div class="inline"><button class="ghost" data-act="addcolcancel">Cancel</button><button class="big" data-act="addcolsave" style="flex:1">Add column</button></div></div>`
+    : `<button class="ghost" data-act="addcol">+ Add a score column (performance task, recitation…)</button>`}
+  <div class="tbl"><table class="gtable"><thead><tr><th class="sticky">Learner</th>${head}<th class="num">Initial</th><th class="num">Quarterly grade</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="muted small"><span class="miss">—</span> = not yet checked or no score; it counts as 0 until you fill it in.</p>
+  <button class="ghost" data-act="csvgrades">⬇ Quarterly grades (Excel)</button>`;
+}
+function refreshGradeRow(i){ const c = getClass(V.cid), q = V.term, groups = gradeCols(c, q), r = gradeRow(c, q, i, groups);
+  r.parts.forEach((p, k) => { const el = $('#g' + i + 'p' + k); if(el) el.textContent = p.ps == null ? '' : p.ps.toFixed(2); });
+  $('#g' + i + 'ig').textContent = r.ig == null ? '' : r.ig.toFixed(2); const qg = $('#g' + i + 'qg'); qg.textContent = r.qg ?? '—'; qg.classList.toggle('low', r.qg != null && r.qg < 75); }
+function csvGrades(){
+  const c = getClass(V.cid), q = V.term, g = gradeSetup(c), groups = gradeCols(c, q);
+  const head = ['No.', 'LRN', 'Learner']; groups.forEach((cols, p) => { cols.forEach(k => head.push(k.title + ' (/' + k.hps + ')')); const P = ['WW', 'PT', 'QA'][p]; head.push(P + ' total', P + ' PS', P + ' WS (' + g.w[p] + '%)'); }); head.push('Initial grade', 'Quarterly grade');
+  const rows = c.learners.map((n, i) => { const r = gradeRow(c, q, i, groups), row = [i + 1, lrnCell(c, i), n];
+    groups.forEach((cols, p) => { cols.forEach(k => row.push(k.get(i) ?? '')); const P = r.parts[p]; row.push(P.total, P.ps == null ? '' : P.ps.toFixed(2), P.ws == null ? '' : P.ws.toFixed(2)); });
+    row.push(r.ig == null ? '' : r.ig.toFixed(2), r.qg ?? ''); return row; });
+  downloadCsv(c.name + ' Q' + q + ' grades', [['Class', c.name], ['Quarter', q], ['Weights WW/PT/QA', g.w.join(' / ')], [], head].concat(rows));
+}
+
+// ---------- taps ----------
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act, t = getTest(V.id);
+  switch(a){
+    case 'home': go('home'); break;
+    case 'load': go('load'); break;
+    case 'open': go('test', { id: b.dataset.id || V.id }); break;
+    case 'new': go('new', { d: { title: '', classId: S.classes.filter(c => !c.sample).length ? S.classes.filter(c => !c.sample).slice(-1)[0].id : 'new', cname: '', names: '', n: 20, opts: 4, key: [], term: S.lastTerm || 1, part: 'WW' } }); break;
+    case 'edit': go('new', { edit: t.id, id: t.id, d: { title: t.title, classId: t.classId, n: t.n, opts: t.opts, key: t.key.slice(), term: t.term || 1, part: t.part || 'WW' } }); break;
+    case 'k': { const i = +b.dataset.i, j = +b.dataset.j; V.d.key[i] = j; b.parentNode.querySelectorAll('.kb').forEach(x => x.classList.toggle('on', x === b)); countKey(); break; }
+    case 'savetest': saveTest(); break;
+    case 'sample': makeSample(); break;
+    case 'del': if(confirm('Delete "' + t.title + '" and all its scores?')){ S.tests = S.tests.filter(x => x !== t); save(); go('home', {}, true); } break;
+    case 'print': printSheets(t); break;
+    case 'check': if(!canCheck()){ toast('Your free papers are used up.'); go('load'); } else go('check', { id: V.id }); break;
+    case 'results': go('results', { id: V.id }); break;
+    case 'pickshow': V.pick = true; render(); break;
+    case 'fix': { const i = +b.dataset.i, j = +b.dataset.j; V.res.ans[i] = V.res.ans[i] === j ? null : j; render(); break; }
+    case 'savepaper': savePaper(); break;
+    case 'unscore': if(confirm('Remove this score? You can check the paper again.')){ delete t.results[b.dataset.l]; save(); render(); } break;
+    case 'csvitems': csvItems(t); break;
+    case 'csvscores': csvScores(t); break;
+    case 'copy': copy(b.dataset.t, b); break;
+    case 'usecode': useCode(); break;
+    case 'grades': go('grades', { cid: t ? t.classId : (V.cid || null), term: t ? (t.term || 1) : null }); break;
+    case 'addcol': V.adding = true; render(); break;
+    case 'addcolcancel': V.adding = false; render(); break;
+    case 'addcolsave': { const c = getClass(V.cid), title = $('#x-title').value.trim(), hps = parseFloat($('#x-hps').value);
+      if(!title || !(hps > 0)){ toast('Type a name and the highest possible score.'); break; }
+      (c.extra = c.extra || []).push({ id: uid(), title, part: $('#x-part').value, hps, term: V.term, scores: {} }); save(); V.adding = false; render(); break; }
+    case 'delcol': { const c = getClass(V.cid); if(confirm('Remove this score column and its scores?')){ c.extra = c.extra.filter(x => x.id !== b.dataset.id); save(); render(); } break; }
+    case 'csvgrades': csvGrades(); break;
+  }
+});
+document.addEventListener('input', e => {
+  if(V.name === 'grades' && e.target.classList.contains('gin')){ const c = getClass(V.cid), x = c.extra.find(k => k.id === e.target.dataset.x);
+    x.scores[e.target.dataset.l] = e.target.value.trim(); save(); refreshGradeRow(+e.target.dataset.l - 1); return; }
+  if(V.name !== 'new') return; const d = V.d, id = e.target.id;
+  if(id === 'f-title') d.title = e.target.value;
+  if(id === 'f-cname') d.cname = e.target.value;
+  if(id === 'f-names') d.names = e.target.value;
+  if(id === 'f-keytype'){ const s = e.target.value.toUpperCase().replace(/[^A-E]/g, ''); for(let i = 0; i < s.length && i < 60; i++) d.key[i] = LET.indexOf(s[i]); if(s.length > d.n){ d.n = Math.min(60, s.length); $('#f-n').value = d.n; } drawKey(); }
+});
+document.addEventListener('change', e => {
+  const id = e.target.id;
+  if(V.name === 'new'){ const d = V.d;
+    if(id === 'f-class'){ d.classId = e.target.value; $('#newclass').hidden = d.classId !== 'new'; }
+    if(id === 'f-n'){ d.n = Math.max(1, Math.min(60, parseInt(e.target.value) || 1)); e.target.value = d.n; drawKey(); }
+    if(id === 'f-opts'){ d.opts = +e.target.value; drawKey(); }
+    if(id === 'f-term') d.term = +e.target.value;
+    if(id === 'f-part') d.part = e.target.value;
+    if(id === 'f-sf1' && e.target.files[0]) importSF1(e.target.files[0]); }
+  if(V.name === 'grades'){ const c = getClass(V.cid), g = c && gradeSetup(c);
+    if(id === 'g-class'){ V.cid = e.target.value; render(); }
+    if(id === 'g-term'){ V.term = +e.target.value; render(); }
+    if(id === 'g-w'){ g.preset = e.target.value; if(WEIGHTS[g.preset].w) g.w = WEIGHTS[g.preset].w.slice(); save(); render(); }
+    if(/^g-c\d$/.test(id)){ g.w[+id.slice(3)] = parseFloat(e.target.value) || 0; save(); render(); }
+    if(id === 'g-tm'){ g.tm = e.target.value; save(); render(); } }
+  if(V.name === 'check'){
+    if(id === 'lpick'){ V.res.learner = +e.target.value; render(); }
+    if(id === 'cam' && e.target.files[0]) readPaper(e.target.files[0]);
+  }
+});
+
+function saveTest(){
+  const d = V.d, err = $('#ferr'); const fail = m => { err.textContent = m; err.hidden = false; err.scrollIntoView({ block: 'center' }); };
+  if(!d.title.trim()) return fail('Please type a test name.');
+  let classId = d.classId;
+  if(!V.edit && classId === 'new'){
+    const rows = parseNames(d.names), names = rows.map(r => r.name);
+    if(!d.cname.trim()) return fail('Please type the class name.');
+    if(!names.length) return fail('Please paste the learners\' names.');
+    if(names.length > 127) return fail('A class can have up to 127 learners.');
+    const c = { id: uid(), name: d.cname.trim(), learners: names, lrn: rows.map(r => r.lrn) }; S.classes.push(c); classId = c.id; }
+  const missing = []; for(let i = 0; i < d.n; i++) if(d.key[i] == null || d.key[i] >= d.opts) missing.push(i + 1);
+  if(missing.length) return fail('The answer key is missing: No. ' + missing.slice(0, 10).join(', ') + (missing.length > 10 ? '…' : ''));
+  if(V.edit){ const t = getTest(V.edit); Object.assign(t, { title: d.title.trim(), term: d.term, part: d.part, n: d.n, opts: d.opts, key: d.key.slice(0, d.n) });
+    Object.values(t.results).forEach(r => r.score = scoreOf(t, r.ans)); save(); toast('Saved. Scores updated with the new key.'); go('test', { id: t.id }, true); }
+  else { S.lastTerm = d.term; const t = { id: uid(), title: d.title.trim(), classId, term: d.term, part: d.part, n: d.n, opts: d.opts, key: d.key.slice(0, d.n), code: 1 + Math.floor(Math.random() * 31), results: {}, at: Date.now() };
+    S.tests.push(t); save(); go('test', { id: t.id }, true); toast('Test saved. Next: print the answer sheets.'); }
+}
+
+// ---------- class list: paste or SF1 Excel ----------
+function parseNames(text){
+  return text.split('\n').map(s => s.trim()).filter(s => s && !/^-+$/.test(s)).map(line => {
+    const m = line.match(/^(\d{12})[\s,;]+(.+)$/); return m ? { lrn: m[1], name: m[2].trim() } : { lrn: '', name: line }; });
+}
+function loadScript(src){ return new Promise((res, rej) => { if(window.XLSX) return res(); const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+async function importSF1(file){
+  const ta = $('#f-names'), err = $('#ferr'); err.hidden = true;
+  try{
+    await loadScript('/app/xlsx.full.min.js');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    let found = null;
+    for(const sn of wb.SheetNames){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: '' });
+      let hr = -1, cL = -1, cN = -1, cS = -1;
+      for(let r = 0; r < Math.min(rows.length, 40) && hr < 0; r++){ rows[r].forEach((v, c) => { const t = String(v).trim().toUpperCase();
+        if(t === 'LRN') cL = c; if(cN < 0 && /^NAME/.test(t)) cN = c; if(/^SEX/.test(t) || t === '(M/F)') cS = c; }); if(cL >= 0 && cN >= 0) hr = r; }
+      if(hr < 0) continue;
+      const list = [];
+      for(let r = hr + 1; r < rows.length; r++){ const lrn = String(rows[r][cL]).replace(/\D/g, ''); const name = String(rows[r][cN]).replace(/\s+/g, ' ').trim();
+        if(lrn.length === 12 && name){ let sex = cS >= 0 ? String(rows[r][cS]).trim().toUpperCase()[0] : '';
+          if(!sex){ for(let c = cN + 1; c < cN + 4; c++){ const v = String(rows[r][c] || '').trim().toUpperCase(); if(v === 'M' || v === 'F'){ sex = v; break; } } }
+          list.push({ lrn, name, sex }); } }
+      if(list.length){ found = { list, sheet: sn, school: rows.flat().join(' ') }; break; }
+    }
+    if(!found){ err.textContent = 'No learners with an LRN were found in this file. Is it the SF1? You can paste the names instead.'; err.hidden = false; return; }
+    const by = (a, b) => a.name.localeCompare(b.name);
+    const boys = found.list.filter(x => x.sex !== 'F').sort(by), girls = found.list.filter(x => x.sex === 'F').sort(by);
+    V.d.names = boys.concat(girls).map(x => x.lrn + '  ' + x.name).join('\n'); ta.value = V.d.names;
+    $('#ncount').textContent = `· ${boys.length} boys, ${girls.length} girls loaded`;
+    toast(`${found.list.length} learners loaded from the SF1. Please check the spelling.`);
+  }catch(e){ err.textContent = 'This file could not be read. Save it as .xlsx and try again, or paste the names.'; err.hidden = false; }
+}
+
+// ---------- reading a photo ----------
+async function readPaper(file){
+  const t = getTest(V.id); V.busy = true; V.err = null; V.res = null; V.pick = false; render();
+  try{
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+    let w = img.naturalWidth, h = img.naturalHeight; const k = Math.min(1, 1500 / Math.max(w, h)); w = Math.round(w * k); h = Math.round(h * k);
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+    const px = cx.getImageData(0, 0, w, h).data, g = new Uint8Array(w * h);
+    for(let i = 0, p = 0; i < g.length; i++, p += 4) g[i] = (px[p] * 299 + px[p + 1] * 587 + px[p + 2] * 114) / 1000;
+    await new Promise(r => setTimeout(r, 30));
+    const r = readGray({ g, w, h }, t.n, t.opts);
+    V.busy = false;
+    if(r.error){ V.err = r.error === 'dark' ? 'The photo is too dark or blurry.' : 'The 4 black corner squares were not found.'; render(); return; }
+    r.wrongTest = r.code !== t.code;
+    if(r.learner > getClass(t.classId).learners.length) r.learner = 0;
+    r.overlay = drawOverlay(cv, r, t);
+    V.res = r; render();
+  }catch(e){ V.busy = false; V.err = 'That photo could not be opened. Please take it again.'; render(); }
+}
+function drawOverlay(cv, r, t){
+  const k = Math.min(1, 900 / cv.width), o = document.createElement('canvas'); o.width = cv.width * k; o.height = cv.height * k;
+  const c = o.getContext('2d'); c.drawImage(cv, 0, 0, o.width, o.height); c.lineWidth = Math.max(2, o.width / 300);
+  const flagged = new Set(r.flags.map(f => f.i));
+  for(let i = 0; i < t.n; i++){
+    const ring = (j, col) => { const [x, y] = itemXY(i, j), [px, py] = mapH(r.H, x, y), [qx, qy] = mapH(r.H, x + LAY.bubR + 1, y); c.strokeStyle = col; c.beginPath(); c.arc(px * k, py * k, Math.hypot(qx - px, qy - py) * k, 0, 7); c.stroke(); };
+    if(flagged.has(i)) ring(t.key[i], '#F08C00');
+    else { ring(t.key[i], '#18A058'); if(r.ans[i] !== t.key[i] && r.ans[i] != null) ring(r.ans[i], '#E0182D'); }
+  }
+  return o.toDataURL('image/jpeg', 0.75);
+}
+function savePaper(){
+  const t = getTest(V.id), r = V.res, L = getClass(t.classId).learners;
+  if(!(r.learner > 0 && r.learner <= L.length)){ toast('Choose the learner first.'); V.pick = true; render(); return; }
+  const isNew = !t.results[r.learner];
+  if(isNew && !canCheck()){ go('load'); return; }
+  const score = scoreOf(t, r.ans);
+  t.results[r.learner] = { ans: r.ans.slice(), score, at: Date.now() };
+  if(isNew) spendOne();
+  save();
+  V.last = L[r.learner - 1] + ' · ' + score + '/' + t.n; V.res = null; V.pick = false;
+  render(); toast('Saved ✓');
+}
+
+// ---------- printing ----------
+function sheetSVG(t, cls, no){
+  const name = no ? cls.learners[no - 1] : '';
+  const T = (x, y, s, txt, extra = '') => `<text x="${x}" y="${y}" font-size="${s}" ${extra}>${esc(txt)}</text>`;
+  let s = `<svg class="sheet" xmlns="http://www.w3.org/2000/svg" viewBox="-7 -6 194 262" width="194mm" height="262mm" font-family="Arial, Helvetica, sans-serif">`;
+  [[0, 0], [180, 0], [0, 250], [180, 250]].forEach(([x, y]) => s += `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" fill="#000"/>`);
+  s += `<rect x="-2.5" y="11.5" width="5" height="5" fill="#000"/>`;
+  s += T(10, 4, 5, t.title.slice(0, 60), 'font-weight="700"');
+  s += T(10, 13, 4.6, 'Name: ' + (name || '______________________________'), 'font-weight="700"');
+  s += T(10, 20.5, 3.6, (cls.name + '   ·   Date: ____________   ·   Score: ______ / ' + t.n));
+  s += T(10, 27, 3, 'Shade one circle fully for each number, using pencil or black pen. Erase cleanly. Do not write on the black squares.', 'fill="#333"');
+  s += T(10, 33, 3, no ? 'Learner no. ' + no + ' — use only your own sheet.' : 'Extra sheet — your teacher will write your name in the app.', 'fill="#333"');
+  s += T(10, 45, 2.6, 'For checking only:', 'fill="#666"');
+  for(let k = 0; k < 12; k++){ const [x, y] = bitXY(k); const on = k < 7 ? (no >> k) & 1 : (t.code >> (k - 7)) & 1;
+    s += on ? `<rect x="${x - 2.5}" y="${y - 2.5}" width="5" height="5" fill="#000"/>` : `<rect x="${x - 2.3}" y="${y - 2.3}" width="4.6" height="4.6" fill="none" stroke="#999" stroke-width="0.3"/>`; }
+  s += `<line x1="8" y1="52" x2="172" y2="52" stroke="#bbb" stroke-width="0.3"/>`;
+  for(let i = 0; i < t.n; i++){
+    const [x0, y] = itemXY(i, 0);
+    s += T(x0 - 4.5, y + 1.3, 3.6, String(i + 1), 'text-anchor="end" font-weight="700"');
+    for(let j = 0; j < t.opts; j++){ const [x] = itemXY(i, j);
+      s += `<circle cx="${x}" cy="${y}" r="${LAY.bubR}" fill="none" stroke="#000" stroke-width="0.3"/>` + T(x, y + 0.9, 2.5, LET[j], 'text-anchor="middle" fill="#9a9a9a"'); }
+  }
+  s += T(90, 247, 2.4, 'Checked with ' + CONFIG.appName, 'text-anchor="middle" fill="#888"');
+  return s + '</svg>';
+}
+function printSheets(t){
+  const cls = getClass(t.classId);
+  const sheets = cls.learners.map((n, i) => sheetSVG(t, cls, i + 1)).concat([sheetSVG(t, cls, 0), sheetSVG(t, cls, 0)]).join('');
+  const w = window.open('', '_blank'); if(!w){ toast('Please allow pop-ups so the sheets can open.'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(t.title)} – answer sheets</title><style>@page{margin:8mm}body{margin:0}.sheet{display:block;break-after:page;page-break-after:always}.sheet:last-child{break-after:auto;page-break-after:auto}.note{font:14px Arial;padding:12px;background:#FFF6D6}@media print{.note{display:none}}</style></head><body><div class="note">${cls.learners.length} named sheets + 2 extra sheets. Print at 100% size (not "fit to page"). Any paper size: A4, short or long bond.</div>${sheets}</body></html>`);
+  w.document.close(); setTimeout(() => { try{ w.focus(); w.print(); }catch(e){} }, 700);
+}
+
+// ---------- Excel files (CSV opens in Excel and Google Sheets) ----------
+function downloadCsv(name, rows){
+  const csv = rows.map(r => r.map(c => { const s = String(c == null ? '' : c); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Saved to your Downloads');
+}
+function csvItems(t){ const st = stats(t), c = getClass(t.classId);
+  downloadCsv(t.title + ' item analysis', [['Test', t.title], ['Class', c.name], ['Learners checked', st.done], ['MPS', st.mps.toFixed(2) + '%'], ['Mean', st.mean.toFixed(2)], ['SD', st.sd.toFixed(2)], ['Highest', st.hi], ['Lowest', st.lo], [], ['Item', 'Key', 'Correct', 'Percent correct', 'Most chosen wrong answer', 'Level']]
+    .concat(st.items.map(x => [x.i + 1, LET[t.key[x.i]], x.ok, x.pct.toFixed(1), x.top, LVL[x.lvl]]))); }
+function csvScores(t){ const c = getClass(t.classId);
+  downloadCsv(t.title + ' scores', [['Test', t.title], ['Class', c.name], ['Items', t.n], [], ['No.', 'LRN', 'Learner', 'Score', 'Percent'].concat(Array.from({ length: t.n }, (_, i) => 'Q' + (i + 1)))]
+    .concat(c.learners.map((n, i) => { const r = t.results[i + 1]; return [i + 1, lrnCell(c, i), n, r ? r.score : '', r ? (r.score / t.n * 100).toFixed(1) : ''].concat(r ? r.ans.map(a => a == null ? '' : LET[a]) : []); }))); }
+
+// ---------- load code ----------
+async function useCode(){
+  const inp = $('#code'), err = $('#codeerr'), code = inp.value.trim().toUpperCase(); err.hidden = true;
+  const fail = m => { err.textContent = m; err.hidden = false; };
+  if(!/^SE-[0-9A-F]{10}-[0-9A-F]{8}-[0-9A-F]{6}$/.test(code)) return fail('That code does not look right. It starts with SE- and has 3 dashes. Please check for typos.');
+  if((S.codes || []).some(c => c.code === code)) return fail('This code is already loaded on this phone.');
+  if(navigator.onLine === false) return fail('You need internet once to load the code. Checking papers works offline after that.');
+  try{
+    const r = await fetch(CONFIG.verifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, device: DEVICE }) });
+    const d = await r.json().catch(() => ({}));
+    if(d.valid){
+      S.codes = (S.codes || []).concat([{ code, papers: CONFIG.loadPapers, used: 0, at: Date.now(), exp: Date.now() + CONFIG.loadDays * 864e5 }]); save();
+      toast(`Loaded! ${CONFIG.loadPapers} papers for ${CONFIG.loadDays} days.`); go('load', {}, true); }
+    else fail(d.reason === 'expired' ? 'This code has expired.' : d.reason === 'devices' ? 'This code is already used on 2 phones. One code is for one teacher.' : d.reason === 'off' ? 'This code was turned off. Please message us.' : (d.error || 'That code was not accepted. Please check for typos.'));
+  }catch(e){ fail('Could not reach the server. Please check your internet and try again.'); }
+}
+
+// ---------- sample class ----------
+function makeSample(){
+  const names = ['AQUINO, Mark Joseph', 'BAUTISTA, Carlo', 'CRUZ, Jerome', 'DIZON, Paolo', 'GARCIA, Kevin', 'MENDOZA, Ralph', '---', 'DELOS SANTOS, Angela', 'FLORES, Kristine', 'LOPEZ, Bea', 'NAVARRO, Jasmine', 'RAMOS, Patricia', 'TORRES, Nicole', 'VILLANUEVA, Hannah'].filter(n => n !== '---');
+  const c = { id: uid(), name: 'Sample – Grade 8 Rizal', learners: names, lrn: names.map((_, i) => '4077261600' + String(10 + i)), sample: true }; S.classes.push(c);
+  const rnd = (lo, hi) => String(Math.round(lo + Math.random() * (hi - lo)));
+  c.extra = [{ id: uid(), title: 'Quiz 1', part: 'WW', hps: 20, term: 1, scores: {} }, { id: uid(), title: 'Quiz 2', part: 'WW', hps: 15, term: 1, scores: {} }, { id: uid(), title: 'PT 1 – Poster', part: 'PT', hps: 50, term: 1, scores: {} }, { id: uid(), title: 'PT 2 – Lab report', part: 'PT', hps: 40, term: 1, scores: {} }];
+  names.forEach((_, i) => { c.extra[0].scores[i + 1] = rnd(11, 20); c.extra[1].scores[i + 1] = rnd(8, 15); c.extra[2].scores[i + 1] = rnd(32, 50); c.extra[3].scores[i + 1] = rnd(26, 40); });
+  const n = 20, key = Array.from({ length: n }, () => Math.floor(Math.random() * 4));
+  const t = { id: uid(), title: 'Sample Science Q1 Exam', classId: c.id, term: 1, part: 'QA', n, opts: 4, key, code: 7, results: {}, sample: true, at: Date.now() };
+  const ease = Array.from({ length: n }, (_, i) => [0.92, 0.85, 0.4, 0.78, 0.3][i % 5]);
+  names.forEach((nm, li) => { const skill = 0.75 + Math.random() * 0.4;
+    const ans = key.map((k, i) => Math.random() < ease[i] * skill ? k : (k + 1 + Math.floor(Math.random() * 3)) % 4);
+    t.results[li + 1] = { ans, score: scoreOf(t, ans), at: Date.now() }; });
+  S.tests.push(t); save(); go('results', { id: t.id });
+  toast('This is a sample. Delete it any time.');
+}
+
+try{ history.replaceState({ v: V }, ''); }catch(e){}
+render();
+if('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+</script>
+</body>
+</html>
