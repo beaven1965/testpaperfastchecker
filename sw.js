@@ -1,6 +1,6 @@
 // Keeps TestPaper FastChecker on the phone so checking works without internet.
 // Bump VERSION whenever you change app/index.html or this list.
-const VERSION = 'tpfastchecker-v4';
+const VERSION = 'tpfastchecker-v5';
 const FILES = ['/', '/app/', '/pay/', '/terms/', '/app/manifest.json', '/app/xlsx.full.min.js', '/icon-32.png', '/icon-180.png', '/icon-192.png', '/icon-512.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== VERSION).map(x => caches.delete(x)))).then(() => self.clients.claim())));
