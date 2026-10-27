@@ -44,7 +44,8 @@ Open `sw.js` and change `tpfastchecker-v1` to `tpfastchecker-v2` (then v3, and s
 
 ## The load (how it works in the app)
 
-- Price now: ₱99 launch promo (regular ₱149). When the promo ends: in `app/index.html` set `price: '₱149'` and `regularPrice: ''`; in `index.html` change ₱99 to ₱149 and remove the "Launch promo" line. Then bump the `sw.js` version.
+- Price: ₱99 launch promo until `promoUntil` (2026-12-31) in `app/index.html`; the app switches to ₱149 by itself after that day. To move the date, change `promoUntil`, and the dates on `index.html`, `pay/index.html` and `terms/index.html`. Then bump the `sw.js` version.
+- Ordering: the teacher sends the order message; you reply with how to pay (GCash now, PayMongo later). No phone number is shown on the site.
 
 - One SE- code from /admin/ = 300 papers that end after 60 days, whichever comes first. The 60 days start when the teacher types the code.
 - The papers left are counted on the phone. A code still works on up to 2 phones (your server's rule), so one teacher could get 300 papers on each phone. Fine for now.

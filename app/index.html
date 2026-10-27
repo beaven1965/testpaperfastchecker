@@ -129,6 +129,11 @@ td.num,th.num{text-align:right}
 .plan{border:2px solid var(--navy);border-radius:16px;padding:18px;background:var(--card);display:flex;flex-direction:column;gap:8px}
 .promo{align-self:flex-start;background:var(--hi);color:#1C2230;font-weight:700;font-size:14px;border-radius:999px;padding:3px 12px}
 .promo s{opacity:.7}
+.lead1{margin:0 0 10px}
+.pr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.pt{border:1.5px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.pt.on{border-color:var(--hi)} .pt.off{opacity:.5} .pt.off strong{text-decoration:line-through}
+.pt small{font-size:14px;font-weight:700} .pt strong{font-family:var(--f-disp);font-weight:400;font-size:36px;line-height:1.1} .pt span{font-size:14px;color:var(--muted)}
 .plan .price{font-family:var(--f-disp);font-size:42px;line-height:1}
 .plan .price small{font-family:var(--f-body);font-size:16px;color:var(--muted)}
 .plan ul{margin:0;padding-left:20px}
@@ -163,12 +168,11 @@ details summary{cursor:pointer;font-weight:700;color:var(--muted);padding:6px 0}
 const CONFIG = {
   appName: 'TestPaper FastChecker',
   freePapers: 50,                        // free checked papers per phone
-  price: '₱99',                          // price of one load now (launch promo)
-  regularPrice: '₱149',                  // regular price. After the promo, set price to '₱149' and regularPrice to ''
+  promoPrice: '₱99',                     // launch promo price of one load
+  regularPrice: '₱149',                  // regular price of one load
+  promoUntil: '2026-12-31',              // last day of the promo. After this day the app shows the regular price by itself.
   loadPapers: 300,                       // papers in one load
   loadDays: 60,                          // a load ends after this many days, or when the papers run out — whichever comes first
-  gcashNumber: '0968 500 7248',
-  gcashName: 'BE***N B.',  // masked, as GCash shows it
   contactEmail: 'testpaperfastchecker@gmail.com',   // TODO: the app's own Gmail
   messenger: 'facebook.com/BeavsApp',    // TODO: your Facebook Page
   // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
@@ -178,6 +182,11 @@ const CONFIG = {
   verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
   mastered: 75, nearly: 50               // item analysis cut-offs, in percent
 };
+const PROMO_ON = new Date() <= new Date(CONFIG.promoUntil + 'T23:59:59+08:00');
+CONFIG.price = PROMO_ON ? CONFIG.promoPrice : CONFIG.regularPrice;
+const longDate = d => d.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+const PROMO_END = longDate(new Date(CONFIG.promoUntil + 'T12:00:00+08:00'));
+const REGULAR_FROM = longDate(new Date(new Date(CONFIG.promoUntil + 'T12:00:00+08:00').getTime() + 864e5));
 // =====================================================================
 
 /*READER-START*/
@@ -374,7 +383,7 @@ function vTest(){
 
 function vNew(){
   const d = V.d;
-  const clsOpts = S.classes.filter(c => !c.sample).map(c => `<option value="${c.id}" ${d.classId === c.id ? 'selected' : ''}>${esc(c.name)} (${c.learners.length})</option>`).join('');
+  const clsOpts = S.classes.filter(c => !c.sample).map(c => `<option value="${c.id}" ${d.classId === c.id ? 'selected' : ''}>${esc(c.name)} · ${c.learners.length} learners</option>`).join('');
   return `<button class="back" data-act="${V.edit ? 'open' : 'home'}" data-id="${V.edit || ''}">‹ Back</button>
   <h1>${V.edit ? 'Change the test' : 'New test'}</h1>
   <label class="lbl">Test name<input type="text" id="f-title" value="${esc(d.title)}" placeholder="e.g. Science 8 – 2nd Quarter Exam"></label>
@@ -475,7 +484,7 @@ function vResults(){
 }
 
 function vLoad(){
-  const msg = `Hi! I sent ${CONFIG.price} by GCash for a ${CONFIG.appName} load (${CONFIG.loadPapers} papers).\nMy phone ID: ${DEVICE}\nMy invite code: ${myInvite()}${invitedBy() ? '\nInvited by: ' + invitedBy() : ''}\nName:\nSchool:`;
+  const msg = `Hi! I want to buy a ${CONFIG.appName} load: ${CONFIG.price} = ${CONFIG.loadPapers} papers.\nMy phone ID: ${DEVICE}\nMy invite code: ${myInvite()}${invitedBy() ? '\nInvited by: ' + invitedBy() : ''}\nName:\nSchool:`;
   const inv = `Hi! I use ${CONFIG.appName} to check test papers with my phone: scores, MPS and item analysis in minutes. First ${CONFIG.freePapers} papers are free. Try it: ${location.origin}/?ref=${myInvite()}`;
   const ll = loadLeft(), loads = activeLoads();
   const meter = (label, left, total, note) => `<div class="meter"><div class="mrow"><span>${label}</span><b>${left} of ${total}</b></div><div class="mbar"><i style="width:${total ? Math.round(left / total * 100) : 0}%"></i></div>${note ? `<small class="muted">${note}</small>` : ''}</div>`;
@@ -486,13 +495,18 @@ function vLoad(){
     ${loads.map(c => meter('🎟 Load ' + c.code.slice(0, 7) + '…', c.papers - (c.used || 0), c.papers, `Ends ${fmtDate(c.exp)} · ${daysLeft(c.exp)} days left`)).join('')}
     ${!ll && !freeLeft() ? '<div class="warn">No papers left. Reload to keep checking. Your tests and scores are safe.</div>' : ''}
   </div>
-  <div class="plan">${CONFIG.regularPrice ? `<span class="promo">🎉 Launch promo · regular <s>${CONFIG.regularPrice}</s></span>` : ''}<div class="price">${CONFIG.price} <small>= ${CONFIG.loadPapers} papers</small></div>
-    <ul><li>About ₱${(parseFloat(CONFIG.price.replace(/[^\d.]/g, '')) / CONFIG.loadPapers).toFixed(2)} per paper</li><li>Use within ${CONFIG.loadDays} days. The load ends when the papers run out or the days are up, whichever comes first.</li><li>Item analysis, MPS, SD, quarterly grades and Excel files included</li><li>No auto-charge. Reload only when you need it.</li></ul></div>
+  <div class="plan"><p class="lead1">One load = <b>${CONFIG.loadPapers} papers</b>, used within <b>${CONFIG.loadDays} days</b></p>
+    <div class="pr2">
+      <div class="pt ${PROMO_ON ? 'on' : 'off'}"><small>🎉 Launch promo</small><strong>${CONFIG.promoPrice}</strong><span>${PROMO_ON ? 'until ' + PROMO_END : 'ended ' + PROMO_END}</span></div>
+      <div class="pt ${PROMO_ON ? '' : 'on'}"><small>Regular price</small><strong>${CONFIG.regularPrice}</strong><span>${PROMO_ON ? 'from ' + REGULAR_FROM : 'now'}</span></div>
+    </div>
+    <ul><li>Same ${CONFIG.loadPapers} papers at either price. Buy during the promo and you pay only ${CONFIG.promoPrice}.</li><li>The load ends when the papers run out or the ${CONFIG.loadDays} days are up, whichever comes first.</li><li>Item analysis, MPS, SD, quarterly grades and Excel files included</li><li>No auto-charge. Reload only when you need it.</li></ul></div>
   <h2>How to load</h2>
-  <div class="ostep"><i>1</i><div><b>Send ${CONFIG.price} by GCash</b><div class="copyrow"><code>${esc(CONFIG.gcashNumber)}</code><button class="copy" data-act="copy" data-t="${esc(CONFIG.gcashNumber.replace(/\s/g, ''))}">Copy</button></div><span class="muted small">GCash name: ${esc(CONFIG.gcashName)}</span></div></div>
-  <div class="ostep"><i>2</i><div><b>Send the GCash receipt and this message</b>
-    <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(msg)}">Copy the message</button></div>
-    <span class="muted small">Email <b>${esc(CONFIG.contactEmail)}</b> or message <b>${esc(CONFIG.messenger)}</b>. Your code arrives within the day.</span></div></div>
+  <div class="ostep"><i>1</i><div><b>Send us your order</b>
+    <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(msg)}">Copy the order message</button></div>
+    <span class="muted small">Paste it in an email to <b>${esc(CONFIG.contactEmail)}</b> or a message to <b>${esc(CONFIG.messenger)}</b>. It already has your phone ID.</span></div></div>
+  <div class="ostep"><i>2</i><div><b>Pay the way we tell you</b>
+    <span class="muted small">We reply with how to pay ${CONFIG.price}. Your load code arrives within the day after payment.</span></div></div>
   <div class="ostep"><i>3</i><div><b>Type your load code here</b>
     <div class="inline"><input type="text" id="code" placeholder="SE-…" autocomplete="off" autocapitalize="characters" spellcheck="false"><button data-act="usecode">Load</button></div>
     <div class="bad" id="codeerr" hidden></div></div></div>
