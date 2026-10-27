@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terms and Privacy</title>
+<meta name="description" content="Terms of Use and Privacy Notice of TestPaper FastChecker.">
+<meta name="theme-color" content="#1F2A44">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+/* Layout: single reading column with one full-width "red pen" band; the video sits right under the headline. */
+:root{
+  --bg:#EEF2F6; --card:#FFFFFF; --ink:#1C2230; --muted:#56607A; --line:#D5DCE6;
+  --navy:#1F2A44; --on-navy:#FFFFFF; --red:#C8102E; --green:#18794E; --hi:#FFE45C;
+  --soft:#E4EAF2;
+  --f-body:'Atkinson Hyperlegible', system-ui, sans-serif; --f-disp:'Young Serif', Georgia, serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12161F; --card:#1B2130; --ink:#E8ECF3; --muted:#A2ACBD; --line:#2C3446;
+  --navy:#2A3A66; --on-navy:#FFFFFF; --red:#FF5A6E; --green:#4CC38A; --hi:#FFE45C; --soft:#171C28; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#12161F; --card:#1B2130; --ink:#E8ECF3; --muted:#A2ACBD; --line:#2C3446;
+  --navy:#2A3A66; --on-navy:#FFFFFF; --red:#FF5A6E; --green:#4CC38A; --hi:#FFE45C; --soft:#171C28; color-scheme:dark; }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.55}
+.in{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:56px}
+h1,h2,h3{font-family:var(--f-disp);font-weight:400;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6.4vw,54px)}
+h2{font-size:clamp(28px,4.6vw,38px)}
+h3{font-size:22px}
+p{margin:0}
+mark{background:none;color:var(--red);padding:0;text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:.08em;text-underline-offset:.14em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--hi);outline-offset:3px}
+.eyebrow{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:18px}
+.bar{display:flex;justify-content:space-between;align-items:center;padding-block:14px}
+.logo{font-family:var(--f-disp);font-size:21px;line-height:1.1;text-decoration:none;display:flex;align-items:center;gap:8px}
+.logo i{font-style:normal;color:var(--red);font-size:28px;line-height:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:12px 26px;border-radius:14px;background:var(--red);color:#fff;font-weight:700;font-size:19px;text-decoration:none;border:0;cursor:pointer;text-align:center}
+.btn.sm{min-height:42px;padding:8px 16px;font-size:16px;background:var(--navy);color:var(--on-navy)}
+.btn.block{width:100%}
+.hero{padding-top:20px}
+.hero .lede{font-size:20px;color:var(--muted);max-width:60ch}
+.video{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:18px;overflow:hidden;background:var(--navy);box-shadow:0 18px 40px -18px rgba(20,30,60,.55)}
+.video video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.cover{position:absolute;inset:0;border:0;padding:0;cursor:pointer;display:grid;place-items:center;color:#fff;
+  background:radial-gradient(circle at 30% 40%, rgba(255,255,255,.08), transparent 55%), var(--navy)}
+.cover canvas{position:absolute;inset:0;width:100%;height:100%}
+.play{position:relative;width:86px;height:86px;border-radius:50%;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 12px rgba(200,16,46,.25)}
+.play::after{content:"";margin-left:7px;border-left:26px solid #fff;border-top:16px solid transparent;border-bottom:16px solid transparent}
+.cover .cap{position:absolute;left:16px;right:16px;bottom:14px;text-align:left;font-weight:700;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.soon{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:#fff;background:var(--navy);font-weight:700}
+.under{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.under small{text-align:center;color:var(--muted);font-size:15px}
+.pain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.pain li{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start}
+.pain li::before{content:"✗";color:var(--red);font-weight:700;font-size:22px;line-height:1.2}
+.band{background:var(--navy);color:var(--on-navy)}
+.band .muted{color:var(--on-navy);opacity:.78}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.col{border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.col.by{background:rgba(255,255,255,.08)}
+.col.tp{background:var(--card);color:var(--ink)}
+.col .t{font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.col strong{font-family:var(--f-disp);font-weight:400;font-size:42px;line-height:1.05;font-variant-numeric:tabular-nums}
+.col.tp strong{color:var(--red)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.step .n{width:38px;height:38px;border-radius:50%;border:2px solid var(--red);color:var(--red);display:grid;place-items:center;font-weight:700}
+.step p{font-size:16px;color:var(--muted)}
+.sheet-demo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center}
+.sheet-demo svg{width:100%;height:auto;max-width:340px;justify-self:center;background:#fff;border-radius:6px;box-shadow:0 14px 30px -14px rgba(20,30,60,.45)}
+.gets{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+.gets li{display:grid;grid-template-columns:26px 1fr;gap:10px}
+.gets li::before{content:"✓";color:var(--green);font-weight:700;font-size:22px;line-height:1.2}
+.gets b{display:block}
+.gets span{color:var(--muted);font-size:16px}
+.quote{border-left:4px solid var(--red);padding:4px 0 4px 18px;font-family:var(--f-disp);font-size:24px;line-height:1.35}
+.price{background:var(--card);border:2px solid var(--navy);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tier{border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.tier strong{font-family:var(--f-disp);font-weight:400;font-size:40px;line-height:1}
+.tier small{color:var(--muted);font-size:15px}
+.order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:o}
+.order li{display:grid;grid-template-columns:34px 1fr;gap:12px;counter-increment:o;align-items:start}
+.order li::before{content:counter(o);width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+details + details{margin-top:10px}
+summary{cursor:pointer;font-weight:700;font-size:18px}
+details p{margin-top:8px;color:var(--muted)}
+footer{padding-block:36px 110px;text-align:center;color:var(--muted);font-size:15px}
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:none}
+.sticky .btn{width:100%;min-height:52px}
+@media (max-width:700px){
+  .steps,.gets,.sheet-demo,.tiers{grid-template-columns:1fr}
+  .sticky{display:block}
+}
+@media (max-width:420px){ .compare{grid-template-columns:1fr} }
+@media (prefers-reduced-motion: no-preference){ .play{animation:pulse 2.4s ease-in-out infinite} }
+@keyframes pulse{50%{box-shadow:0 0 0 20px rgba(200,16,46,.12)}}
+</style>
+<style>
+.doc h2{margin-top:34px} .doc h3{margin-top:20px;font-size:20px} .doc p,.doc li{color:var(--ink)} .doc ul,.doc ol{padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.copyrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .copyrow code{font-family:var(--f-body);font-weight:700;font-size:22px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+.copy{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+</style>
+</head>
+<body>
+<div class="in bar"><a class="logo" href="/"><i>✓</i>TestPaper FastChecker</a><a class="btn sm" href="/app/">Open the app</a></div>
+<section><div class="in stack doc">
+  <p class="eyebrow">Last updated: October 27, 2026</p>
+  <h1 id="terms">Terms of Use</h1>
+  <p>TestPaper FastChecker ("the app") is made by <b>Beavs Apps Software Development Service</b>, a business registered with the DTI, City of Santa Rosa, Laguna, Philippines. By using the app, you agree to these terms.</p>
+  <h3>1. What the app does</h3>
+  <p>The app helps teachers print answer sheets, check them with a phone camera, and compute scores, MPS, SD, item analysis and quarterly grades. It is a tool to help you. <b>You remain responsible for the final scores and grades you submit.</b> Please look at each result before saving, especially items marked orange.</p>
+  <h3>2. Free papers and loads</h3>
+  <ul>
+    <li>Each phone gets <b>50 free papers</b>, once.</li>
+    <li>A load costs <b>₱99</b> during the launch promo (regular price ₱149) and gives <b>300 papers</b>.</li>
+    <li>A load ends when its papers are used or <b>60 days</b> after you type the code, whichever comes first. <b>Unused papers are forfeited</b> after 60 days.</li>
+    <li>One code is for one teacher and works on up to 2 of your own devices. Do not share or sell codes. Shared codes may be turned off.</li>
+    <li>Prices may change. A change never affects a load you already bought.</li>
+  </ul>
+  <h3>3. Payments and refunds</h3>
+  <ul>
+    <li>Payment is by GCash. There is no automatic charge.</li>
+    <li>If you paid but did not get a code, or sent the wrong amount, email us with your GCash reference number. We will send the code or refund you.</li>
+    <li>Once a code is loaded and used, the load cannot be refunded.</li>
+  </ul>
+  <h3>4. Invite a co-teacher</h3>
+  <p>For every 2 teachers who buy their first load with your invite code, you get 1 free load (300 papers). Invites to yourself or fake accounts do not count. We may change or end this offer at any time; free loads already given are kept.</p>
+  <h3>5. Fair use</h3>
+  <p>Do not copy, resell or misuse the app, and do not use it to harm learners or anyone else.</p>
+  <h3>6. No guarantee</h3>
+  <p>We work hard to make the app accurate, but photos can be blurry or shading can be light. The app is provided "as is". We are not liable for losses caused by wrong scores that were not checked, by lost phones, or by data that was not backed up.</p>
+
+  <h1 id="privacy" style="margin-top:40px">Privacy Notice</h1>
+  <p>We follow the <b>Data Privacy Act of 2012 (Republic Act No. 10173)</b>. In short: <b>your learners' information stays on your phone.</b></p>
+  <h3>What stays on your phone only</h3>
+  <ul>
+    <li>Learners' names and LRN, class lists, answer keys, answers, scores and grades.</li>
+    <li>Photos of answer sheets are read on your phone and are <b>not uploaded or kept</b>.</li>
+  </ul>
+  <p>We cannot see this information. If you clear your browser data, lose your phone or delete the app, it is gone, so use <b>Settings → Back up my data</b> from time to time and keep the backup file safe.</p>
+  <h3>What we receive</h3>
+  <ul>
+    <li><b>When you load a code:</b> the code and a random phone ID, to check the code and stop codes from being shared.</li>
+    <li><b>When you pay:</b> the GCash receipt and any details you send us (name, school, email or Facebook name), only to give you your code and help you.</li>
+  </ul>
+  <p>We do not sell or share your information. We keep payment records only as long as needed for the business and the law.</p>
+  <h3>Your rights</h3>
+  <p>You may ask what information we have about you, ask us to correct it, or ask us to delete it. Email <b>testpaperfastchecker@gmail.com</b>.</p>
+  <h3>Teachers' responsibility</h3>
+  <p>You hold your learners' information. Keep your phone locked, share backups and Excel files only with people who need them (like your principal), and follow your school's and DepEd's data privacy rules.</p>
+  <a class="btn block" href="/app/">Open the app</a>
+</div></section>
+<footer><div class="in">© 2026 Beavs Apps · <a href="/pay/">How to pay</a> · <a href="/terms/#terms">Terms of Use</a> · <a href="/terms/#privacy">Privacy Notice</a><br>Questions: <b>testpaperfastchecker@gmail.com</b></div></footer>
+</body>
+</html>

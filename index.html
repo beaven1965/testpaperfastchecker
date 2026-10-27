@@ -36,7 +36,7 @@ h1{font-size:clamp(34px,6.4vw,54px)}
 h2{font-size:clamp(28px,4.6vw,38px)}
 h3{font-size:22px}
 p{margin:0}
-mark{background:linear-gradient(transparent 58%, var(--hi) 58%);color:inherit;padding:0 3px}
+mark{background:none;color:var(--red);padding:0;text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:.08em;text-underline-offset:.14em}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--hi);outline-offset:3px}
 .eyebrow{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
@@ -199,6 +199,8 @@ footer{padding-block:36px 110px;text-align:center;color:var(--muted);font-size:1
       <li><span>Send ₱99 by GCash to the number shown, then send the receipt with the message the app copies for you.</span></li>
       <li><span>Type the code you receive. Your 300 papers are loaded right away, with a meter that shows papers and days left.</span></li>
     </ol>
+    <p class="muted"><a href="/pay/">See the full payment guide</a></p>
+    <p><b>Invite a co-teacher:</b> for every 2 teachers who buy their first load with your invite code, you get 1 free load (300 papers). Your invite code is in the app, under <b>My load</b>.</p>
     <a class="btn block" href="/app/">Start with 50 free papers</a>
   </div>
 </div></section>
@@ -220,7 +222,7 @@ footer{padding-block:36px 110px;text-align:center;color:var(--muted);font-size:1
   <a class="btn" href="/app/">Check my first papers free</a>
 </div></section>
 
-<footer><div class="in">TestPaper FastChecker by Beavs Apps · Santa Rosa City, Laguna<br>Questions: <b>testpaperfastchecker@gmail.com</b></div></footer>
+<footer><div class="in">© 2026 Beavs Apps · <a href="/pay/">How to pay</a> · <a href="/terms/#terms">Terms of Use</a> · <a href="/terms/#privacy">Privacy Notice</a><br>Questions: <b>testpaperfastchecker@gmail.com</b></div></footer>
 <div class="sticky"><a class="btn" href="/app/">Try free: 50 papers</a></div>
 
 <script>
@@ -251,6 +253,11 @@ footer{padding-block:36px 110px;text-align:center;color:var(--muted);font-size:1
   cover.addEventListener('click', () => { cover.hidden = true; v.hidden = false; v.src = 'promo.mp4'; v.play().catch(() => { v.hidden = true; soon.hidden = false; }); });
   v.addEventListener('error', () => { v.hidden = true; soon.hidden = false; });
 })();
+</script>
+<script>
+// keep an invite code (?ref=ABC123) on the way into the app
+(function(){ const r = new URLSearchParams(location.search).get('ref'); if(!r) return;
+  document.querySelectorAll('a[href^="/app/"]').forEach(a => { a.href = '/app/?ref=' + encodeURIComponent(r); }); })();
 </script>
 </body>
 </html>

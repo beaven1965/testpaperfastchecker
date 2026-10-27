@@ -41,6 +41,9 @@ p{margin:0}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:6px}
 .brand{background:none;border:0;padding:6px 0;font-family:var(--f-disp);font-size:19px;line-height:1.1;text-align:left;display:flex;align-items:center;gap:8px}
 .brand i{font-style:normal;color:var(--red);font-size:26px;line-height:1}
+.hdr-r{display:flex;align-items:center;gap:6px}
+.gear{background:none;border:0;font-size:22px;padding:6px;color:var(--muted)}
+.foot a,.card a{color:inherit;font-weight:700}
 .pill{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:700}
 .pill.low{border-color:var(--red);color:var(--red)}
 .pill.paid{border-color:var(--green);color:var(--green)}
@@ -51,7 +54,7 @@ p{margin:0}
 .link{background:none;border:0;color:var(--red);font-weight:700;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
 .back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;align-self:flex-start}
 .hook h1{font-size:34px}
-.hook mark{background:linear-gradient(transparent 55%, var(--hi) 55%);color:inherit;padding:0 2px}
+.hook mark{background:none;color:var(--red);padding:0;text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:.09em;text-underline-offset:.14em}
 .steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
 .steps li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;counter-increment:s}
 .steps li::before{content:counter(s);width:34px;height:34px;border-radius:50%;border:2px solid var(--red);color:var(--red);display:grid;place-items:center;font-weight:700}
@@ -170,6 +173,8 @@ const CONFIG = {
   messenger: 'facebook.com/BeavsApp',    // TODO: your Facebook Page
   // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
   // Add this app's web address to the CORS list at the top of verify-code.js.
+  business: 'Beavs Apps',                // shown at the bottom of every screen
+  inviteNeed: 2,                         // teachers who must buy a first load for the inviter to get 1 free load
   verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
   mastered: 75, nearly: 50               // item analysis cut-offs, in percent
 };
@@ -277,6 +282,9 @@ const LET = 'ABCDE';
 let S = loadDb();
 function loadDb(){ try{ const v = JSON.parse(localStorage.getItem(DB) || 'null'); if(v && Array.isArray(v.tests)) return v; }catch(e){} return { classes: [], tests: [], used: 0, codes: [] }; }
 function save(){ try{ localStorage.setItem(DB, JSON.stringify(S)); }catch(e){ toast('This phone is not saving. Open TestPaper FastChecker in Chrome, not a private tab.'); } }
+const myInvite = () => DEVICE.slice(2, 8).toUpperCase();
+(function keepInvite(){ try{ const r = new URLSearchParams(location.search).get('ref'); if(r && /^[A-Z0-9]{6}$/i.test(r)) localStorage.setItem('tp-ref', r.toUpperCase()); }catch(e){} })();
+const invitedBy = () => { try{ const r = localStorage.getItem('tp-ref'); return r && r !== myInvite() ? r : ''; }catch(e){ return ''; } };
 const DEVICE = (() => { let d = null; try{ d = localStorage.getItem('st_device'); }catch(e){}
   if(!d || !/^d-[a-z0-9]{12,40}$/.test(d)){ const a = new Uint8Array(12); crypto.getRandomValues(a); d = 'd-' + Array.from(a, b => b.toString(36).padStart(2, '0')).join('').slice(0, 24); try{ localStorage.setItem('st_device', d); }catch(e){} }
   return d; })();
@@ -322,7 +330,7 @@ function header(){
   const left = papersLeft(), ll = loadLeft();
   const pill = ll ? `<button class="pill ${left <= 30 ? 'low' : 'paid'}" data-act="load">🎟 ${left} papers · ${daysLeft(loadEnds())} days</button>`
     : `<button class="pill ${left <= 10 ? 'low' : ''}" data-act="load">${left ? left + ' free papers left' : '🎟 Load now'}</button>`;
-  return `<header class="top"><button class="brand" data-act="home"><i>✓</i>${CONFIG.appName}</button>${pill}</header>`;
+  return `<header class="top"><button class="brand" data-act="home"><i>✓</i>${CONFIG.appName}</button><div class="hdr-r">${pill}<button class="gear" data-act="settings" aria-label="Settings">⚙</button></div></header>`;
 }
 
 function vHome(){
@@ -467,7 +475,8 @@ function vResults(){
 }
 
 function vLoad(){
-  const msg = `Hi! I sent ${CONFIG.price} by GCash for a ${CONFIG.appName} load (${CONFIG.loadPapers} papers).\nMy phone ID: ${DEVICE}\nName:\nSchool:`;
+  const msg = `Hi! I sent ${CONFIG.price} by GCash for a ${CONFIG.appName} load (${CONFIG.loadPapers} papers).\nMy phone ID: ${DEVICE}\nMy invite code: ${myInvite()}${invitedBy() ? '\nInvited by: ' + invitedBy() : ''}\nName:\nSchool:`;
+  const inv = `Hi! I use ${CONFIG.appName} to check test papers with my phone: scores, MPS and item analysis in minutes. First ${CONFIG.freePapers} papers are free. Try it: ${location.origin}/?ref=${myInvite()}`;
   const ll = loadLeft(), loads = activeLoads();
   const meter = (label, left, total, note) => `<div class="meter"><div class="mrow"><span>${label}</span><b>${left} of ${total}</b></div><div class="mbar"><i style="width:${total ? Math.round(left / total * 100) : 0}%"></i></div>${note ? `<small class="muted">${note}</small>` : ''}</div>`;
   return `<button class="back" data-act="home">‹ Back</button>
@@ -487,12 +496,37 @@ function vLoad(){
   <div class="ostep"><i>3</i><div><b>Type your load code here</b>
     <div class="inline"><input type="text" id="code" placeholder="SE-…" autocomplete="off" autocapitalize="characters" spellcheck="false"><button data-act="usecode">Load</button></div>
     <div class="bad" id="codeerr" hidden></div></div></div>
-  <p class="foot">This phone's ID: <b>${DEVICE}</b> · Loads add up: a new load does not erase the papers you have left.</p>`;
+  <h2>Invite a co-teacher</h2>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <p>For every <b>${CONFIG.inviteNeed} teachers</b> who buy their first load with your invite code, you get <b>1 free load (${CONFIG.loadPapers} papers)</b>.</p>
+    <div class="copyrow"><span class="muted small">Your invite code</span><code>${myInvite()}</code></div>
+    <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(inv)}">Copy the invite message</button></div>
+    <span class="muted small">Send it in Messenger or your faculty group chat. The link already carries your code.</span>
+  </div>
+  <p class="foot">This phone's ID: <b>${DEVICE}</b> · Loads add up: a new load does not erase the papers you have left. <a href="/pay/">Full payment guide</a></p>`;
+}
+
+function vSettings(){
+  const n = S.tests.filter(t => !t.sample).length, c = S.classes.filter(k => !k.sample).length;
+  return `<button class="back" data-act="home">‹ Back</button>
+  <h1>Settings</h1>
+  <div class="tiles">
+    <button class="tile" data-act="load"><span class="n">🎟</span><b>My load</b><small>Papers and days left, buy a load, invite a co-teacher</small></button>
+    <button class="tile" data-act="backup"><span class="n">💾</span><b>Back up my data</b><small>Save ${c} class${c === 1 ? '' : 'es'} and ${n} test${n === 1 ? '' : 's'} as one file. Keep it in Google Drive or email it to yourself.</small></button>
+    <label class="tile" for="restore"><span class="n">📂</span><b>Restore from a backup</b><small>On a new phone, choose the backup file you saved</small></label>
+    <input type="file" id="restore" class="hide" accept=".json,application/json">
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px">
+    <a href="/pay/">How to pay</a><a href="/terms/#terms">Terms of Use</a><a href="/terms/#privacy">Privacy Notice</a><a href="/">About ${CONFIG.appName}</a>
+  </div>
+  <p class="muted small">This phone's ID: <b>${DEVICE}</b> · Invite code: <b>${myInvite()}</b></p>
+  ${V.confirmWipe ? `<div class="bad" style="display:flex;flex-direction:column;gap:10px"><b>Delete all classes, tests and scores on this phone? This cannot be undone.</b><div class="inline"><button class="ghost" data-act="wipeno">Keep my data</button><button class="big red" data-act="wipeyes" style="flex:1">Delete everything</button></div></div>`
+    : `<button class="link" data-act="wipe" style="align-self:flex-start">Delete all data on this phone</button>`}`;
 }
 
 function render(){
-  const v = { home: vHome, test: vTest, new: vNew, check: vCheck, results: vResults, load: vLoad, grades: vGrades }[V.name] || vHome;
-  $('#app').innerHTML = header() + v() + `<p class="foot">Scores stay on this phone. ${CONFIG.appName} by Beavs Apps</p>`;
+  const v = { home: vHome, test: vTest, new: vNew, check: vCheck, results: vResults, load: vLoad, grades: vGrades, settings: vSettings }[V.name] || vHome;
+  $('#app').innerHTML = header() + v() + `<p class="foot">Scores stay on this phone. © ${new Date().getFullYear()} ${CONFIG.business} · <a href="/terms/#terms">Terms</a> · <a href="/terms/#privacy">Privacy</a></p>`;
   if(V.name === 'new') drawKey();
 }
 
@@ -592,6 +626,11 @@ document.addEventListener('click', e => {
     case 'csvscores': csvScores(t); break;
     case 'copy': copy(b.dataset.t, b); break;
     case 'usecode': useCode(); break;
+    case 'settings': go('settings'); break;
+    case 'backup': backup(); break;
+    case 'wipe': V.confirmWipe = true; render(); break;
+    case 'wipeno': V.confirmWipe = false; render(); break;
+    case 'wipeyes': { const codes = S.codes, used = S.used; S = { classes: [], tests: [], used, codes }; save(); go('home', {}, true); toast('All classes and tests were deleted. Your load is kept.'); break; }
     case 'grades': go('grades', { cid: t ? t.classId : (V.cid || null), term: t ? (t.term || 1) : null }); break;
     case 'addcol': V.adding = true; render(); break;
     case 'addcolcancel': V.adding = false; render(); break;
@@ -626,6 +665,7 @@ document.addEventListener('change', e => {
     if(id === 'g-w'){ g.preset = e.target.value; if(WEIGHTS[g.preset].w) g.w = WEIGHTS[g.preset].w.slice(); save(); render(); }
     if(/^g-c\d$/.test(id)){ g.w[+id.slice(3)] = parseFloat(e.target.value) || 0; save(); render(); }
     if(id === 'g-tm'){ g.tm = e.target.value; save(); render(); } }
+  if(id === 'restore' && e.target.files[0]) restore(e.target.files[0]);
   if(V.name === 'check'){
     if(id === 'lpick'){ V.res.learner = +e.target.value; render(); }
     if(id === 'cam' && e.target.files[0]) readPaper(e.target.files[0]);
@@ -798,6 +838,24 @@ function csvItems(t){ const st = stats(t), c = getClass(t.classId);
 function csvScores(t){ const c = getClass(t.classId);
   downloadCsv(t.title + ' scores', [['Test', t.title], ['Class', c.name], ['Items', t.n], [], ['No.', 'LRN', 'Learner', 'Score', 'Percent'].concat(Array.from({ length: t.n }, (_, i) => 'Q' + (i + 1)))]
     .concat(c.learners.map((n, i) => { const r = t.results[i + 1]; return [i + 1, lrnCell(c, i), n, r ? r.score : '', r ? (r.score / t.n * 100).toFixed(1) : ''].concat(r ? r.ans.map(a => a == null ? '' : LET[a]) : []); }))); }
+
+// ---------- backup ----------
+function backup(){
+  const data = { app: 'TestPaperFastChecker', v: 1, at: new Date().toISOString(), classes: S.classes.filter(c => !c.sample), tests: S.tests.filter(t => !t.sample), lastTerm: S.lastTerm };
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  a.download = 'FastChecker-backup-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Backup saved to your Downloads');
+}
+async function restore(file){
+  try{
+    const d = JSON.parse(await file.text());
+    if(d.app !== 'TestPaperFastChecker' || !Array.isArray(d.tests)) throw 0;
+    const haveC = new Set(S.classes.map(c => c.id)), haveT = new Set(S.tests.map(t => t.id));
+    d.classes.forEach(c => { if(!haveC.has(c.id)) S.classes.push(c); });
+    let added = 0; d.tests.forEach(t => { if(!haveT.has(t.id)){ S.tests.push(t); added++; } });
+    save(); go('home', {}, true); toast(added ? `Restored ${added} test${added === 1 ? '' : 's'} from the backup` : 'Everything in that backup is already on this phone');
+  }catch(e){ toast('That file is not a FastChecker backup.'); }
+}
 
 // ---------- load code ----------
 async function useCode(){

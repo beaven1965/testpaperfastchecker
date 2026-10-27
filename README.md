@@ -49,3 +49,10 @@ Open `sw.js` and change `tpfastchecker-v1` to `tpfastchecker-v2` (then v3, and s
 - One SE- code from /admin/ = 300 papers that end after 60 days, whichever comes first. The 60 days start when the teacher types the code.
 - The papers left are counted on the phone. A code still works on up to 2 phones (your server's rule), so one teacher could get 300 papers on each phone. Fine for now.
 - Teachers should type the code within 30 days of getting it, because your server's codes expire after 30 days.
+
+## Pages added later
+
+- `/pay/` — How to pay (GCash steps, invite program). Put your GCash number and name in `pay/index.html` too (look for `09XX XXX XXXX` and `B. B.`).
+- `/terms/` — Terms of Use and Privacy Notice. Read it once and change anything you want.
+- In the app: ⚙ Settings → My load, Back up my data, Restore, links, Delete all data.
+- Invite program: for every 2 teachers who buy a first load with an invite code, the inviter gets 1 free load. The order message the app copies includes "My invite code" and "Invited by", so you can track it on your Beavs Apps Desk and send the free code by hand.
