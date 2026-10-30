@@ -174,7 +174,6 @@ const CONFIG = {
   loadPapers: 300,                       // papers in one load
   loadDays: 60,                          // a load ends after this many days, or when the papers run out — whichever comes first
   contactEmail: 'testpaperfastchecker@gmail.com',   // TODO: the app's own Gmail
-  messenger: 'facebook.com/BeavsApp',    // TODO: your Facebook Page
   // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
   // Add this app's web address to the CORS list at the top of verify-code.js.
   business: 'Beavs Apps',                // shown at the bottom of every screen
@@ -504,7 +503,7 @@ function vLoad(){
   <h2>How to load</h2>
   <div class="ostep"><i>1</i><div><b>Send us your order</b>
     <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(msg)}">Copy the order message</button></div>
-    <span class="muted small">Paste it in an email to <b>${esc(CONFIG.contactEmail)}</b> or a message to <b>${esc(CONFIG.messenger)}</b>. It already has your phone ID.</span></div></div>
+    <span class="muted small">Paste it in an email to <b>${esc(CONFIG.contactEmail)}</b>. It already has your phone ID.</span></div></div>
   <div class="ostep"><i>2</i><div><b>Pay the way we tell you</b>
     <span class="muted small">We reply with how to pay ${CONFIG.price}. Your load code arrives within the day after payment.</span></div></div>
   <div class="ostep"><i>3</i><div><b>Type your load code here</b>
@@ -515,7 +514,7 @@ function vLoad(){
     <p>For every <b>${CONFIG.inviteNeed} teachers</b> who buy their first load with your invite code, you get <b>1 free load (${CONFIG.loadPapers} papers)</b>.</p>
     <div class="copyrow"><span class="muted small">Your invite code</span><code>${myInvite()}</code></div>
     <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(inv)}">Copy the invite message</button></div>
-    <span class="muted small">Send it in Messenger or your faculty group chat. The link already carries your code.</span>
+    <span class="muted small">Send it in your faculty group chat or by message. The link already carries your code.</span>
   </div>
   <p class="foot">This phone's ID: <b>${DEVICE}</b> · Loads add up: a new load does not erase the papers you have left. <a href="/pay/">Full payment guide</a></p>`;
 }
@@ -534,7 +533,7 @@ function vSettings(){
     <a href="/pay/">How to pay</a><a href="/terms/#terms">Terms of Use</a><a href="/terms/#privacy">Privacy Notice</a><a href="/">About ${CONFIG.appName}</a>
   </div>
   <p class="muted small">This phone's ID: <b>${DEVICE}</b> · Invite code: <b>${myInvite()}</b></p>
-  ${V.confirmWipe ? `<div class="bad" style="display:flex;flex-direction:column;gap:10px"><b>Delete all classes, tests and scores on this phone? This cannot be undone.</b><div class="inline"><button class="ghost" data-act="wipeno">Keep my data</button><button class="big red" data-act="wipeyes" style="flex:1">Delete everything</button></div></div>`
+  ${V.confirmWipe ? `<div class="bad" style="display:flex;flex-direction:column;gap:10px"><b>Delete all classes, tests and scores on this phone? This cannot be undone.</b><div class="inline"><button class="ghost" data-act="wipeno" style="color:var(--ink);border-color:var(--ink)">Keep my data</button><button data-act="wipeyes" style="flex:none;min-height:50px;background:var(--red);color:#fff;border:0;border-radius:12px;font-weight:700;padding:0 14px">Delete everything</button></div></div>`
     : `<button class="link" data-act="wipe" style="align-self:flex-start">Delete all data on this phone</button>`}`;
 }
 
