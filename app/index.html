@@ -177,7 +177,7 @@ const CONFIG = {
   // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
   // Add this app's web address to the CORS list at the top of verify-code.js.
   business: 'Beavs Apps',                // shown at the bottom of every screen
-  inviteNeed: 2,                         // teachers who must buy a first load for the inviter to get 1 free load
+  inviteNeed: 3,                         // teachers who must buy a first load for the inviter to get 1 free load
   verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
   mastered: 75, nearly: 50               // item analysis cut-offs, in percent
 };
@@ -496,8 +496,8 @@ function vLoad(){
   </div>
   <div class="plan"><p class="lead1">One load = <b>${CONFIG.loadPapers} papers</b>, used within <b>${CONFIG.loadDays} days</b></p>
     <div class="pr2">
-      <div class="pt ${PROMO_ON ? 'on' : 'off'}"><small>🎉 Launch promo</small><strong>${CONFIG.promoPrice}</strong><span>${PROMO_ON ? 'until ' + PROMO_END : 'ended ' + PROMO_END}</span></div>
-      <div class="pt ${PROMO_ON ? '' : 'on'}"><small>Regular price</small><strong>${CONFIG.regularPrice}</strong><span>${PROMO_ON ? 'from ' + REGULAR_FROM : 'now'}</span></div>
+      <div class="pt ${PROMO_ON ? 'on' : 'off'}"><small>🎉 Launch promo</small><strong>${CONFIG.promoPrice}</strong><span>${PROMO_ON ? 'until ' + PROMO_END + ' or the first 100 teachers' : 'ended ' + PROMO_END}</span></div>
+      <div class="pt ${PROMO_ON ? '' : 'on'}"><small>Regular price</small><strong>${CONFIG.regularPrice}</strong><span>${PROMO_ON ? 'after the promo' : 'now'}</span></div>
     </div>
     <ul><li>Same ${CONFIG.loadPapers} papers at either price. Buy during the promo and you pay only ${CONFIG.promoPrice}.</li><li>The load ends when the papers run out or the ${CONFIG.loadDays} days are up, whichever comes first.</li><li>Item analysis, MPS, SD, quarterly grades and Excel files included</li><li>No auto-charge. Reload only when you need it.</li></ul></div>
   <h2>How to load</h2>
