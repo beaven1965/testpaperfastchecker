@@ -875,6 +875,7 @@ async function restore(file){
 async function useCode(){
   const inp = $('#code'), err = $('#codeerr'), code = inp.value.trim().toUpperCase(); err.hidden = true;
   const fail = m => { err.textContent = m; err.hidden = false; };
+  if(!code) return fail('Type your load code first.');
   if(!/^SE-[0-9A-F]{10}-[0-9A-F]{8}-[0-9A-F]{6}$/.test(code)) return fail('That code does not look right. It starts with SE- and has 3 dashes. Please check for typos.');
   if((S.codes || []).some(c => c.code === code)) return fail('This code is already loaded on this phone.');
   if(navigator.onLine === false) return fail('You need internet once to load the code. Checking papers works offline after that.');
