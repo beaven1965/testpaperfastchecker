@@ -177,7 +177,8 @@ const CONFIG = {
   // Load codes are checked by your ScitechLectureTool server (same SE- codes from /admin/).
   // Add this app's web address to the CORS list at the top of verify-code.js.
   business: 'Beavs Apps',                // shown at the bottom of every screen
-  inviteNeed: 3,                         // teachers who must buy a first load for the inviter to get 1 free load
+  inviteNeed: 3,                         // teachers who must buy a first load for the inviter to get the bonus
+  inviteBonus: 50,                       // free papers the inviter gets for every 3 teachers who buy a first load
   verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
   mastered: 75, nearly: 50               // item analysis cut-offs, in percent
 };
@@ -290,8 +291,10 @@ const LET = 'ABCDE';
 let S = loadDb();
 function loadDb(){ try{ const v = JSON.parse(localStorage.getItem(DB) || 'null'); if(v && Array.isArray(v.tests)) return v; }catch(e){} return { classes: [], tests: [], used: 0, codes: [] }; }
 function save(){ try{ localStorage.setItem(DB, JSON.stringify(S)); }catch(e){ toast('This phone is not saving. Open TestPaper FastChecker in Chrome, not a private tab.'); } }
-const myInvite = () => DEVICE.slice(2, 8).toUpperCase();
-(function keepInvite(){ try{ const r = new URLSearchParams(location.search).get('ref'); if(r && /^[A-Z0-9]{6}$/i.test(r)) localStorage.setItem('tp-ref', r.toUpperCase()); }catch(e){} })();
+// Invite code: 6 characters made from this phone's ID, using only easy-to-read characters (no 0, O, 1, I or L)
+const INV_CHARS = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const myInvite = () => Array.from(DEVICE.slice(2, 8), ch => INV_CHARS[ch.charCodeAt(0) % INV_CHARS.length]).join('');
+(function keepInvite(){ try{ const r = new URLSearchParams(location.search).get('ref'); if(r && /^[2-9A-HJKMNP-Z]{6}$/i.test(r)) localStorage.setItem('tp-ref', r.toUpperCase()); }catch(e){} })();
 const invitedBy = () => { try{ const r = localStorage.getItem('tp-ref'); return r && r !== myInvite() ? r : ''; }catch(e){ return ''; } };
 const DEVICE = (() => { let d = null; try{ d = localStorage.getItem('st_device'); }catch(e){}
   if(!d || !/^d-[a-z0-9]{12,40}$/.test(d)){ const a = new Uint8Array(12); crypto.getRandomValues(a); d = 'd-' + Array.from(a, b => b.toString(36).padStart(2, '0')).join('').slice(0, 24); try{ localStorage.setItem('st_device', d); }catch(e){} }
@@ -503,20 +506,18 @@ function vLoad(){
   <h2>How to load</h2>
   <div class="ostep"><i>1</i><div><b>Send us your order</b>
     <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(msg)}">Copy the order message</button></div>
-    <span class="muted small">Paste it in an email to <b>${esc(CONFIG.contactEmail)}</b>. It already has your phone ID.</span></div></div>
-  <div class="ostep"><i>2</i><div><b>Pay the way we tell you</b>
-    <span class="muted small">We reply with how to pay ${CONFIG.price}. Your load code arrives within the day after payment.</span></div></div>
-  <div class="ostep"><i>3</i><div><b>Type your load code here</b>
+    <span class="muted small">Tap this email and paste your message: <a href="mailto:${esc(CONFIG.contactEmail)}?subject=${encodeURIComponent(CONFIG.appName + ' load order')}"><b>${esc(CONFIG.contactEmail)}</b></a>. We will reply with the details. Your load code arrives within the day after payment.</span></div></div>
+  <div class="ostep"><i>2</i><div><b>Type your load code here</b>
     <div class="inline"><input type="text" id="code" placeholder="SE-…" autocomplete="off" autocapitalize="characters" spellcheck="false"><button data-act="usecode">Load</button></div>
     <div class="bad" id="codeerr" hidden></div></div></div>
   <h2>Invite a co-teacher</h2>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
-    <p>For every <b>${CONFIG.inviteNeed} teachers</b> who buy their first load with your invite code, you get <b>1 free load (${CONFIG.loadPapers} papers)</b>.</p>
+    <p>For every <b>${CONFIG.inviteNeed} teachers</b> who buy their first load with your invite code, you get <b>${CONFIG.inviteBonus} free papers</b>.</p>
     <div class="copyrow"><span class="muted small">Your invite code</span><code>${myInvite()}</code></div>
     <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(inv)}">Copy the invite message</button></div>
     <span class="muted small">Send it in your faculty group chat or by message. The link already carries your code.</span>
   </div>
-  <p class="foot">This phone's ID: <b>${DEVICE}</b> · Loads add up: a new load does not erase the papers you have left. <a href="/pay/">Full payment guide</a></p>`;
+  <p class="foot">Your scores stay on your phone only. · Loads add up: a new load does not erase the papers you have left. <a href="/pay/">Full payment guide</a></p>`;
 }
 
 function vSettings(){
@@ -532,7 +533,7 @@ function vSettings(){
   <div class="card" style="display:flex;flex-direction:column;gap:8px">
     <a href="/pay/">How to pay</a><a href="/terms/#terms">Terms of Use</a><a href="/terms/#privacy">Privacy Notice</a><a href="/">About ${CONFIG.appName}</a>
   </div>
-  <p class="muted small">This phone's ID: <b>${DEVICE}</b> · Invite code: <b>${myInvite()}</b></p>
+  <p class="muted small">Your scores stay on your phone only. · Invite code: <b>${myInvite()}</b></p>
   ${V.confirmWipe ? `<div class="bad" style="display:flex;flex-direction:column;gap:10px"><b>Delete all classes, tests and scores on this phone? This cannot be undone.</b><div class="inline"><button class="ghost" data-act="wipeno" style="color:var(--ink);border-color:var(--ink)">Keep my data</button><button data-act="wipeyes" style="flex:none;min-height:50px;background:var(--red);color:#fff;border:0;border-radius:12px;font-weight:700;padding:0 14px">Delete everything</button></div></div>`
     : `<button class="link" data-act="wipe" style="align-self:flex-start">Delete all data on this phone</button>`}`;
 }
