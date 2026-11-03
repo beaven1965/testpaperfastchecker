@@ -178,7 +178,7 @@ const CONFIG = {
   // Add this app's web address to the CORS list at the top of verify-code.js.
   business: 'Beavs Apps',                // shown at the bottom of every screen
   inviteNeed: 3,                         // teachers who must buy a first load for the inviter to get the bonus
-  inviteBonus: 50,                       // free papers the inviter gets for every 3 teachers who buy a first load
+  inviteBonus: 50,                       // free papers the inviter gets, one time, once 3 teachers have bought a first load
   verifyUrl: 'https://scitechlecturetool.netlify.app/.netlify/functions/verify-code',
   mastered: 75, nearly: 50               // item analysis cut-offs, in percent
 };
@@ -512,7 +512,7 @@ function vLoad(){
     <div class="bad" id="codeerr" hidden></div></div></div>
   <h2>Invite a co-teacher</h2>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
-    <p>For every <b>${CONFIG.inviteNeed} teachers</b> who buy their first load with your invite code, you get <b>${CONFIG.inviteBonus} free papers</b>.</p>
+    <p>When <b>${CONFIG.inviteNeed} teachers</b> buy their first load with your invite code, you get <b>${CONFIG.inviteBonus} free papers</b> (one time). Only you, the one who invites, get the bonus.</p>
     <div class="copyrow"><span class="muted small">Your invite code</span><code>${myInvite()}</code></div>
     <div class="copyrow"><button class="copy" data-act="copy" data-t="${esc(inv)}">Copy the invite message</button></div>
     <span class="muted small">Send it in your faculty group chat or by message. The link already carries your code.</span>

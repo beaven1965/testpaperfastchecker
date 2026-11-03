@@ -56,6 +56,6 @@ Open `sw.js` and change `tpfastchecker-v1` to `tpfastchecker-v2` (then v3, and s
 - `/pay/` — How to pay (GCash steps, invite program). Put your GCash number and name in `pay/index.html` too (look for `09XX XXX XXXX` and `B. B.`).
 - `/terms/` — Terms of Use and Privacy Notice. Read it once and change anything you want.
 - In the app: ⚙ Settings → My load, Back up my data, Restore, links, Delete all data.
-- Invite program: for every 3 teachers who buy a first load with an invite code, the inviter gets 1 free load. The order message the app copies includes "My invite code" and "Invited by", so you can track it on your Beavs Apps Desk and send the free code by hand.
+- Invite program: when 3 teachers buy a first load with an invite code, the inviter gets 50 free papers, one time (plan A). The order message the app copies includes "My invite code" and "Invited by", so you can track it on your Beavs Apps Desk and send the free code by hand.
 
 - Promo end: the app switches to ₱149 by itself after `promoUntil`. If 100 teachers buy sooner, end the promo by hand: set `promoUntil` in `app/index.html` to yesterday's date, update the dates on the pages, and bump the `sw.js` version.
