@@ -11,6 +11,6 @@ Film on your phone, vertical or horizontal. Voice in Taglish is fine. Show hands
 | 40–58s | Phone takes a photo of a shaded sheet. Score appears with green and red circles. Tap **Save**. Next paper. Repeat 3 times fast. | "Kunan ng litrato ang bawat papel. Lumalabas agad ang score. Save, next. Labinlimang segundo bawat papel." |
 | 58–72s | Results screen: big MPS, item analysis table, "Reteach these items" chips. Tap Excel. | "Pagkatapos, nandiyan na ang MPS, ang item analysis, at kung aling items ang dapat ituro ulit. May Excel file pa para sa class record." |
 | 72–82s | Teacher closes the laptop, smiles, goes to family. | "Ang dating dalawa't kalahating oras, mga labindalawang minuto na lang." |
-| 82–90s | Screen: testpaperfastchecker.netlify.app · "100 papers FREE" | "Subukan nang libre ang unang isang daang papel. Pumunta sa test paper fast checker dot netlify dot app." |
+| 82–90s | Screen: testpaperfastchecker.netlify.app · "50 papers FREE" | "Subukan nang libre ang unang limampung papel. Pumunta sa test paper fast checker dot netlify dot app." |
 
 Tips: keep each shot short, add big captions (many people watch muted), and end on the web address for 3 seconds.
